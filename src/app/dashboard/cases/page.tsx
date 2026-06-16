@@ -1,0 +1,270 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Briefcase, Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/shared/empty-state";
+import { TableSkeleton } from "@/components/shared/loading-skeleton";
+import { Pagination } from "@/components/shared/pagination";
+import { Breadcrumbs } from "@/components/shared/breadcrumbs";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { CaseFilters } from "@/components/cases/case-filters";
+import {
+  CaseStatusBadge,
+  PriorityBadge,
+} from "@/components/cases/case-status-badge";
+import { ExportButton } from "@/components/shared/export-button";
+import { useCases, useDeleteCase, type CaseListItem } from "@/hooks/use-cases";
+import { CASE_TYPES, CASE_STATUS, PRIORITY_LABELS } from "@/lib/constants";
+import { formatCurrency, formatDate } from "@/lib/format";
+import { toast } from "@/store/toast-store";
+import type { CaseFiltersInput } from "@/lib/validations/case";
+
+export default function CasesPage() {
+  const [filters, setFilters] = useState<Partial<CaseFiltersInput>>({
+    page: 1,
+    limit: 20,
+    sortBy: "createdAt",
+    sortDir: "desc",
+  });
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
+  const { data, isLoading, isError, error } = useCases(filters);
+  const deleteMutation = useDeleteCase();
+
+  async function handleDelete() {
+    if (!confirmId) return;
+    try {
+      await deleteMutation.mutateAsync(confirmId);
+      toast.success("تم حذف القضية بنجاح");
+      setConfirmId(null);
+    } catch (e: any) {
+      toast.error(e.message || "فشل حذف القضية");
+    }
+  }
+
+  const items = data?.items ?? [];
+  const isEmpty = !isLoading && items.length === 0;
+  const hasFilters = !!(filters.q || filters.status || filters.caseType || filters.priority);
+
+  return (
+    <div className="space-y-6">
+      <Breadcrumbs
+        items={[
+          { label: "لوحة التحكم", href: "/dashboard" },
+          { label: "القضايا" },
+        ]}
+      />
+
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">القضايا</h1>
+          <p className="text-sm text-slate-500 mt-1">
+            إدارة جميع قضايا المكتب — البحث، الفلترة، والمتابعة
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <ExportButton<CaseListItem>
+            filename="cases"
+            columns={[
+              { header: "رقم القضية", accessor: (r) => r.caseNumber },
+              { header: "العنوان", accessor: (r) => r.title },
+              { header: "العميل", accessor: (r) => r.client?.name ?? "" },
+              {
+                header: "النوع",
+                accessor: (r) =>
+                  (CASE_TYPES as Record<string, string>)[r.caseType] ?? r.caseType,
+              },
+              { header: "المحكمة", accessor: (r) => r.court },
+              {
+                header: "المحامي الرئيسي",
+                accessor: (r) =>
+                  r.lawyers.find((l) => l.isPrimary)?.user.name ?? "",
+              },
+              {
+                header: "القيمة (ر.س)",
+                accessor: (r) => (r.value ? Number(r.value).toFixed(2) : ""),
+              },
+              {
+                header: "الأولوية",
+                accessor: (r) =>
+                  (PRIORITY_LABELS as Record<string, string>)[r.priority] ??
+                  r.priority,
+              },
+              {
+                header: "الحالة",
+                accessor: (r) =>
+                  (CASE_STATUS as Record<string, string>)[r.status] ?? r.status,
+              },
+              {
+                header: "تاريخ الإنشاء",
+                accessor: (r) => formatDate(r.createdAt),
+              },
+            ]}
+            fetcher={async () => {
+              const params = new URLSearchParams({
+                ...Object.fromEntries(
+                  Object.entries(filters)
+                    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+                    .map(([k, v]) => [k, String(v)]),
+                ),
+                page: "1",
+                limit: "1000",
+              });
+              const res = await fetch(`/api/cases?${params}`);
+              const json = await res.json();
+              return (json.data?.items ?? []) as CaseListItem[];
+            }}
+          />
+          <Link href="/dashboard/cases/new">
+            <Button>
+              <Plus className="size-4" />
+              قضية جديدة
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <Card className="p-4">
+        <CaseFilters value={filters} onChange={setFilters} />
+      </Card>
+
+      {isLoading && (
+        <Card className="p-4">
+          <TableSkeleton rows={6} cols={7} />
+        </Card>
+      )}
+
+      {isError && (
+        <Card className="p-6 text-center text-red-600">
+          حدث خطأ: {(error as Error).message}
+        </Card>
+      )}
+
+      {isEmpty && (
+        <EmptyState
+          icon={Briefcase}
+          title={hasFilters ? "لا توجد نتائج" : "لا توجد قضايا بعد"}
+          description={
+            hasFilters
+              ? "جرّب تعديل عوامل التصفية أو البحث بكلمة أخرى"
+              : "ابدأ بإضافة أول قضية لمكتبك"
+          }
+          action={
+            !hasFilters && (
+              <Link href="/dashboard/cases/new">
+                <Button>
+                  <Plus className="size-4" />
+                  إضافة قضية
+                </Button>
+              </Link>
+            )
+          }
+        />
+      )}
+
+      {!isLoading && items.length > 0 && (
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr className="text-right text-xs font-medium text-slate-500 uppercase">
+                  <th className="px-4 py-3">رقم القضية</th>
+                  <th className="px-4 py-3">العنوان</th>
+                  <th className="px-4 py-3">العميل</th>
+                  <th className="px-4 py-3">النوع</th>
+                  <th className="px-4 py-3">المحامي</th>
+                  <th className="px-4 py-3">القيمة</th>
+                  <th className="px-4 py-3">الأولوية</th>
+                  <th className="px-4 py-3">الحالة</th>
+                  <th className="px-4 py-3 text-center">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {items.map((c) => {
+                  const primary = c.lawyers.find((l) => l.isPrimary);
+                  return (
+                    <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 font-mono text-xs text-slate-600 tabular-nums">
+                        {c.caseNumber}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-slate-900 max-w-[260px] truncate">
+                        <Link
+                          href={`/dashboard/cases/${c.id}`}
+                          className="hover:text-brand-600"
+                        >
+                          {c.title}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">{c.client.name}</td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {(CASE_TYPES as Record<string, string>)[c.caseType]}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {primary?.user.name ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700 tabular-nums">
+                        {c.value ? formatCurrency(c.value) : "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <PriorityBadge priority={c.priority} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <CaseStatusBadge status={c.status} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <Link href={`/dashboard/cases/${c.id}`}>
+                            <Button variant="ghost" size="icon" aria-label="عرض">
+                              <Eye className="size-4" />
+                            </Button>
+                          </Link>
+                          <Link href={`/dashboard/cases/${c.id}/edit`}>
+                            <Button variant="ghost" size="icon" aria-label="تعديل">
+                              <Edit className="size-4" />
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            aria-label="حذف"
+                            onClick={() => setConfirmId(c.id)}
+                          >
+                            <Trash2 className="size-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {data && (
+            <div className="px-4 pb-4">
+              <Pagination
+                page={data.page}
+                totalPages={data.totalPages}
+                total={data.total}
+                limit={data.limit}
+                onPageChange={(p) => setFilters({ ...filters, page: p })}
+              />
+            </div>
+          )}
+        </Card>
+      )}
+
+      <ConfirmDialog
+        open={!!confirmId}
+        onOpenChange={(o) => !o && setConfirmId(null)}
+        title="حذف القضية"
+        description="هل أنت متأكد من حذف هذه القضية؟ سيتم حذف جميع البيانات المرتبطة بها (الجلسات، المستندات، الفواتير). لا يمكن التراجع عن هذا الإجراء."
+        confirmText="حذف"
+        loading={deleteMutation.isPending}
+        onConfirm={handleDelete}
+      />
+    </div>
+  );
+}

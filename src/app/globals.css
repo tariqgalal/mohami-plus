@@ -1,0 +1,193 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@theme {
+  --font-sans:
+    "IBM Plex Sans Arabic", "Tajawal", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+
+  /* الألوان الرئيسية للعلامة */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
+  --color-brand-900: #1e3a8a;
+
+  /* لوحة Super Admin - عنبري */
+  --color-admin-500: #f59e0b;
+  --color-admin-600: #d97706;
+  --color-admin-700: #b45309;
+
+  /* shadcn variables */
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(222.2 84% 4.9%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(222.2 84% 4.9%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(222.2 84% 4.9%);
+  --color-primary: hsl(217 91% 60%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  --color-secondary: hsl(210 40% 96.1%);
+  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
+  --color-muted: hsl(210 40% 96.1%);
+  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
+  --color-accent: hsl(210 40% 96.1%);
+  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+  --color-border: hsl(214.3 31.8% 91.4%);
+  --color-input: hsl(214.3 31.8% 91.4%);
+  --color-ring: hsl(217 91% 60%);
+
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: hsl(210 40% 98%);
+    color: var(--color-foreground);
+    font-weight: 400;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 700;
+  }
+
+  /* تحسين عرض الأرقام العربية بخط لاتيني للقراءة */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* RTL scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(210 40% 96%);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(215 20% 75%);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(215 20% 60%);
+  }
+}
+
+@layer utilities {
+  .container-app {
+    max-width: 1400px;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-app {
+      padding-inline: 2rem;
+    }
+  }
+
+  /* Animation utilities */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes zoom-in-95 {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide-in-from-top-2 {
+    from { opacity: 0; transform: translateY(-0.5rem); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-in-from-bottom {
+    from { opacity: 0; transform: translateY(0.75rem); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .animate-in {
+    animation-duration: 200ms;
+    animation-fill-mode: both;
+  }
+  .fade-in { animation-name: fade-in; }
+  .zoom-in-95 { animation-name: zoom-in-95; }
+  .slide-in-from-top-2 { animation-name: slide-in-from-top-2; }
+  .slide-in-from-bottom { animation-name: slide-in-from-bottom; }
+  .animate-fade-in-page {
+    animation: fade-in 300ms ease-out;
+  }
+
+  /* Gradient utilities */
+  .bg-sidebar-gradient {
+    background-image: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  }
+  .bg-admin-sidebar-gradient {
+    background-image: linear-gradient(180deg, #0f172a 0%, #1e293b 50%, #422006 100%);
+  }
+  .bg-brand-gradient {
+    background-image: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  }
+  .bg-hero-gradient {
+    background-image: linear-gradient(135deg, #eff6ff 0%, #ffffff 60%, #f0f9ff 100%);
+  }
+  .text-gradient-brand {
+    background-image: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Striped table */
+  .table-striped tbody tr:nth-child(even) {
+    background-color: hsl(210 40% 98%);
+  }
+  .table-striped tbody tr:hover {
+    background-color: hsl(217 91% 96%);
+  }
+
+  /* Card hover lift */
+  .card-lift {
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  }
+  .card-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px -10px rgba(15, 23, 42, 0.15);
+  }
+}
+
+@media print {
+  aside,
+  header,
+  nav,
+  [data-no-print],
+  .no-print {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body {
+    background: white !important;
+  }
+}

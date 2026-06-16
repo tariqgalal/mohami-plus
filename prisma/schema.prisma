@@ -1,0 +1,548 @@
+// ====================================================================
+// محامي بلس — Mohami Plus ERP SaaS
+// Prisma Schema
+// ====================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============ MULTI-TENANCY ============
+
+model Tenant {
+  id                String       @id @default(cuid())
+  name              String
+  slug              String       @unique
+  licenseNumber     String?
+  email             String
+  phone             String?
+  city              String
+  address           String?
+  logo              String?
+  plan              Plan         @default(BASIC)
+  status            TenantStatus @default(TRIAL)
+  trialEndsAt       DateTime?
+  subscriptionStart DateTime?
+  subscriptionEnd   DateTime?
+  maxUsers          Int          @default(3)
+  maxCases          Int          @default(25)
+  maxStorage        BigInt       @default(5368709120)
+  monthlyPrice      Decimal      @default(0)
+  lastActivityAt    DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  users          User[]
+  cases          Case[]
+  clients        Client[]
+  sessions       CourtSession[]
+  meetings       Meeting[]
+  invoices       Invoice[]
+  documents      Document[]
+  activities     Activity[]
+  payments       Payment[]
+  trialRenewals  TrialRenewal[]
+}
+
+enum Plan {
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum TenantStatus {
+  TRIAL
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+}
+
+// ============ USERS & AUTH ============
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  password       String
+  name           String
+  phone          String?
+  avatar         String?
+  role           UserRole  @default(LAWYER)
+  specialization String?
+  isActive       Boolean   @default(true)
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id])
+
+  assignedCases   CaseLawyer[]
+  sessions        CourtSession[]    @relation("SessionLawyer")
+  meetings        MeetingAttendee[]
+  activities      Activity[]
+  createdCases    Case[]            @relation("CaseCreator")
+  createdInvoices Invoice[]         @relation("InvoiceCreator")
+
+  isSuperAdmin Boolean @default(false)
+
+  trialRenewalsGranted TrialRenewal[] @relation("TrialRenewalGrantor")
+
+  @@index([tenantId])
+  @@index([email])
+}
+
+enum UserRole {
+  FIRM_ADMIN
+  SENIOR_LAWYER
+  LAWYER
+  TRAINEE
+  SECRETARY
+  ACCOUNTANT
+}
+
+// ============ CASES ============
+
+model Case {
+  id          String     @id @default(cuid())
+  caseNumber  String
+  title       String
+  description String?    @db.Text
+  caseType    CaseType
+  court       String
+  courtCity   String?
+  status      CaseStatus @default(OPEN)
+  priority    Priority   @default(MEDIUM)
+  value       Decimal?
+  filingDate  DateTime?
+  closingDate DateTime?
+  result      String?
+  notes       String?    @db.Text
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("CaseCreator", fields: [createdById], references: [id])
+
+  lawyers    CaseLawyer[]
+  sessions   CourtSession[]
+  documents  Document[]
+  invoices   Invoice[]
+  activities Activity[]
+  opponents  Opponent[]
+
+  @@unique([tenantId, caseNumber])
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([status])
+}
+
+model CaseLawyer {
+  id         String   @id @default(cuid())
+  caseId     String
+  case       Case     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  isPrimary  Boolean  @default(false)
+  assignedAt DateTime @default(now())
+
+  @@unique([caseId, userId])
+}
+
+model Opponent {
+  id     String  @id @default(cuid())
+  name   String
+  type   String?
+  lawyer String?
+  phone  String?
+  notes  String?
+  caseId String
+  case   Case    @relation(fields: [caseId], references: [id], onDelete: Cascade)
+}
+
+enum CaseType {
+  COMMERCIAL
+  LABOR
+  PERSONAL_STATUS
+  CRIMINAL
+  ADMINISTRATIVE
+  REAL_ESTATE
+  INTELLECTUAL_PROP
+  INSURANCE
+  BANKING
+  EXECUTION
+  OTHER
+}
+
+enum CaseStatus {
+  OPEN
+  IN_PROGRESS
+  ON_HOLD
+  WON
+  LOST
+  SETTLED
+  CLOSED
+  APPEALED
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// ============ COURT SESSIONS ============
+
+model CourtSession {
+  id           String        @id @default(cuid())
+  date         DateTime
+  time         String
+  court        String
+  hall         String?
+  judge        String?
+  sessionType  SessionType   @default(HEARING)
+  status       SessionStatus @default(SCHEDULED)
+  result       String?
+  nextAction   String?
+  notes        String?       @db.Text
+  reminder     Boolean       @default(true)
+  reminderSent Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id])
+
+  lawyerId String
+  lawyer   User   @relation("SessionLawyer", fields: [lawyerId], references: [id])
+
+  @@index([tenantId])
+  @@index([caseId])
+  @@index([date])
+}
+
+enum SessionType {
+  HEARING
+  PLEADING
+  PRONOUNCEMENT
+  RECONCILIATION
+  EXPERT
+  FIRST
+  OTHER
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  POSTPONED
+  CANCELLED
+}
+
+// ============ CLIENTS ============
+
+model Client {
+  id              String       @id @default(cuid())
+  name            String
+  clientType      ClientType
+  contactPerson   String?
+  nationalId      String?
+  email           String?
+  phone           String
+  secondaryPhone  String?
+  city            String
+  address         String?
+  notes           String?      @db.Text
+  status          ClientStatus @default(ACTIVE)
+  idDocumentUrl   String?
+  idDocumentName  String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  cases    Case[]
+  invoices Invoice[]
+
+  @@index([tenantId])
+  @@index([phone])
+}
+
+enum ClientType {
+  INDIVIDUAL
+  COMPANY
+  INSTITUTION
+  GOVERNMENT
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+// ============ MEETINGS ============
+
+model Meeting {
+  id           String        @id @default(cuid())
+  title        String
+  date         DateTime
+  time         String
+  duration     Int
+  meetingType  MeetingType
+  location     String?
+  isVirtual    Boolean       @default(false)
+  meetingLink  String?
+  notes        String?       @db.Text
+  minutesUrl   String?
+  minutesName  String?
+  status       MeetingStatus @default(SCHEDULED)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  attendees MeetingAttendee[]
+
+  @@index([tenantId])
+  @@index([date])
+}
+
+model MeetingAttendee {
+  id            String  @id @default(cuid())
+  meetingId     String
+  meeting       Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?   @relation(fields: [userId], references: [id])
+  externalName  String?
+  externalEmail String?
+
+  @@unique([meetingId, userId])
+}
+
+enum MeetingType {
+  CLIENT
+  INTERNAL
+  COURT
+  EXTERNAL
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+// ============ FINANCE ============
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String
+  description   String
+  amount        Decimal
+  tax           Decimal       @default(0)
+  totalAmount   Decimal
+  paidAmount    Decimal       @default(0)
+  status        InvoiceStatus @default(DRAFT)
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime
+  paidDate      DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("InvoiceCreator", fields: [createdById], references: [id])
+
+  payments PaymentRecord[]
+
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId])
+  @@index([clientId])
+  @@index([status])
+}
+
+model PaymentRecord {
+  id          String        @id @default(cuid())
+  amount      Decimal
+  method      PaymentMethod
+  reference   String?
+  notes       String?
+  receiptUrl  String?
+  receiptName String?
+  paidAt      DateTime      @default(now())
+  invoiceId   String
+  invoice     Invoice       @relation(fields: [invoiceId], references: [id])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  PARTIAL
+  OVERDUE
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  MADA
+  CREDIT_CARD
+  CHECK
+}
+
+// ============ DOCUMENTS ============
+
+model Document {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  category    DocCategory @default(OTHER)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id])
+
+  @@index([tenantId])
+  @@index([caseId])
+}
+
+enum DocCategory {
+  POWER_OF_ATTORNEY
+  CONTRACT
+  COURT_DOCUMENT
+  EVIDENCE
+  CORRESPONDENCE
+  ID_DOCUMENT
+  FINANCIAL
+  OTHER
+}
+
+// ============ ACTIVITY LOG ============
+
+model Activity {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  details   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  caseId String?
+  case   Case?   @relation(fields: [caseId], references: [id])
+
+  @@index([tenantId])
+  @@index([entityId])
+  @@index([createdAt])
+}
+
+// ============ PLATFORM PAYMENTS ============
+
+model Payment {
+  id          String   @id @default(cuid())
+  amount      Decimal
+  currency    String   @default("SAR")
+  status      String
+  provider    String   @default("moyasar")
+  providerRef String?
+  plan        Plan
+  period      String
+  createdAt   DateTime @default(now())
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+}
+
+// ============ PLATFORM SETTINGS ============
+
+model PlatformSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
+// ============ NOTIFICATIONS ============
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  type      String
+  isRead    Boolean  @default(false)
+  data      String?  @db.Text
+  createdAt DateTime @default(now())
+
+  userId String
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+// ============ TRIAL RENEWAL LOG ============
+
+model TrialRenewal {
+  id          String             @id @default(cuid())
+  type        TrialRenewalType
+  days        Int
+  reason      String?            @db.Text
+  previousEnd DateTime?
+  newEnd      DateTime
+  createdAt   DateTime           @default(now())
+
+  tenantId    String
+  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  grantedById String
+  grantedBy   User               @relation("TrialRenewalGrantor", fields: [grantedById], references: [id])
+
+  @@index([tenantId])
+  @@index([createdAt])
+}
+
+enum TrialRenewalType {
+  EXTEND_TRIAL
+  GRANT_FREE_MONTHS
+  CONVERT_TO_PAID
+}
