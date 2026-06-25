@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
           name: data.firmName,
           slug,
           licenseNumber: data.licenseNumber || null,
-          email: data.firmEmail,
+          email: data.firmEmail || data.adminEmail,
           phone: data.firmPhone,
           city: data.city,
           plan: data.plan as Plan,

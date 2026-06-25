@@ -40,7 +40,7 @@ async function main() {
   // ============ SUPER ADMIN ============
   const superAdmin = await prisma.user.upsert({
     where: { email: "admin@mohamiplus.sa" },
-    update: {},
+    update: { password: adminHash, isActive: true, isSuperAdmin: true },
     create: {
       email: "admin@mohamiplus.sa",
       password: adminHash,
@@ -76,7 +76,7 @@ async function main() {
 
   const firmAdmin1 = await prisma.user.upsert({
     where: { email: "admin@demo-firm.sa" },
-    update: {},
+    update: { password: adminHash, isActive: true },
     create: {
       email: "admin@demo-firm.sa",
       password: adminHash,
@@ -92,7 +92,7 @@ async function main() {
 
   const lawyer1 = await prisma.user.upsert({
     where: { email: "lawyer@demo-firm.sa" },
-    update: {},
+    update: { password: lawyerHash, isActive: true },
     create: {
       email: "lawyer@demo-firm.sa",
       password: lawyerHash,
@@ -108,7 +108,7 @@ async function main() {
 
   const lawyer2 = await prisma.user.upsert({
     where: { email: "khaled@demo-firm.sa" },
-    update: {},
+    update: { password: lawyerHash, isActive: true },
     create: {
       email: "khaled@demo-firm.sa",
       password: lawyerHash,
@@ -146,7 +146,7 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "admin@aladala.sa" },
-    update: {},
+    update: { password: adminHash, isActive: true },
     create: {
       email: "admin@aladala.sa",
       password: adminHash,
@@ -184,7 +184,7 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "admin@almizan.sa" },
-    update: {},
+    update: { password: adminHash, isActive: true },
     create: {
       email: "admin@almizan.sa",
       password: adminHash,
@@ -197,6 +197,26 @@ async function main() {
       lastLoginAt: addDays(now, -5),
     },
   });
+
+  // ============ CLEANUP transient demo data (idempotent re-seed) ============
+  // المستخدمون والمكاتب مُحدَّثون عبر upsert. هنا نمسح البيانات المتداولة
+  // ثم نعيد إنشاءها كي يبقى الـ seed قابلاً للتشغيل عدة مرات بدون تعارضات.
+  const tenantIds = [tenant1.id, tenant2.id, tenant3.id];
+  await prisma.activity.deleteMany({ where: { tenantId: { in: tenantIds } } });
+  await prisma.paymentRecord.deleteMany({
+    where: { invoice: { tenantId: { in: tenantIds } } },
+  });
+  await prisma.invoice.deleteMany({ where: { tenantId: { in: tenantIds } } });
+  await prisma.document.deleteMany({ where: { tenantId: { in: tenantIds } } });
+  await prisma.courtSession.deleteMany({ where: { tenantId: { in: tenantIds } } });
+  await prisma.meetingAttendee.deleteMany({
+    where: { meeting: { tenantId: { in: tenantIds } } },
+  });
+  await prisma.meeting.deleteMany({ where: { tenantId: { in: tenantIds } } });
+  await prisma.case.deleteMany({ where: { tenantId: { in: tenantIds } } });
+  await prisma.client.deleteMany({ where: { tenantId: { in: tenantIds } } });
+  await prisma.payment.deleteMany({ where: { tenantId: { in: tenantIds } } });
+  console.log("✓ تنظيف البيانات السابقة");
 
   // ============ PLATFORM PAYMENTS (for revenue charts) ============
   // Tenant 2: 3 paid months
