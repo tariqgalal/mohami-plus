@@ -1,0 +1,80 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # كل يوم الساعة 3 صباحاً UTC = 6 صباحاً السعودية
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-production:
+    name: E2E على الإنتاج
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      TEST_ENV: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # Vercel auto-deploy ياخد دقائق على push للـ main
+      # نستنّى عشان الـ deployment يكون فعلاً جاهز
+      - name: Wait for Vercel deployment
+        if: github.event_name == 'push'
+        run: |
+          echo "ننتظر Vercel ينشر..."
+          sleep 120
+          echo "بدء فحص جاهزية الإنتاج"
+          for i in $(seq 1 12); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" https://mohami-plus-pi.vercel.app/login)
+            echo "محاولة $i: HTTP $CODE"
+            if [ "$CODE" = "200" ]; then exit 0; fi
+            sleep 10
+          done
+          echo "::warning::لم نتأكد من جاهزية الإنتاج، نكمل على أي حال"
+
+      - name: Run Playwright tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_id }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+      - name: Post job summary
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "## ✅ كل اختبارات E2E عدّت على الإنتاج" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## ❌ فشل في اختبارات E2E على الإنتاج" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**حمّل ملف \`playwright-report-${{ github.run_id }}\` من Artifacts لشوف التفاصيل.**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**أكثر سبب شائع:** Vercel deployment لسه ما خلصش — جرّب 'Re-run jobs' بعد دقيقتين." >> $GITHUB_STEP_SUMMARY
+          fi
