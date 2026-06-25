@@ -3,12 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { Save, RefreshCw } from "lucide-react";
+import {
+  Save,
+  RefreshCw,
+  Settings2,
+  Wallet,
+  HardDrive,
+  Info,
+  CheckCircle2,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/store/toast-store";
+import { cn } from "@/lib/utils";
 import {
   PLANS,
   PLATFORM_SETTING_KEYS as K,
@@ -80,173 +89,278 @@ export function PlatformSettingsForm({
   });
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">إعدادات عامة</CardTitle>
-        </CardHeader>
-        <CardContent className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="trial">فترة التجربة المجانية (بالأيام)</Label>
-            <Input
-              id="trial"
-              type="number"
-              min={1}
-              max={90}
-              value={form.trialDays}
-              onChange={(e) => setForm({ ...form, trialDays: e.target.value })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="vat">ضريبة القيمة المضافة (%)</Label>
-            <Input
-              id="vat"
-              type="number"
-              min={0}
-              max={100}
-              step={0.1}
-              value={form.vatRate}
-              onChange={(e) => setForm({ ...form, vatRate: e.target.value })}
-            />
-          </div>
-          <div className="sm:col-span-2 space-y-2">
-            <Label htmlFor="welcome">رسالة الترحيب للمشتركين الجدد</Label>
-            <textarea
-              id="welcome"
-              rows={3}
-              value={form.welcomeMessage}
-              onChange={(e) =>
-                setForm({ ...form, welcomeMessage: e.target.value })
-              }
-              className="w-full px-3 py-2 rounded-md border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6 pb-24">
+      <SectionCard
+        icon={Settings2}
+        title="إعدادات عامة"
+        subtitle="فترة التجربة، الضريبة، ورسالة الترحيب التي يراها المشتركون الجدد"
+      >
+        <div className="grid sm:grid-cols-2 gap-5">
+          <Field
+            id="trial"
+            label="فترة التجربة المجانية"
+            suffix="يوم"
+            type="number"
+            min={1}
+            max={90}
+            value={form.trialDays}
+            onChange={(v) => setForm({ ...form, trialDays: v })}
+          />
+          <Field
+            id="vat"
+            label="ضريبة القيمة المضافة"
+            suffix="%"
+            type="number"
+            min={0}
+            max={100}
+            step={0.1}
+            value={form.vatRate}
+            onChange={(v) => setForm({ ...form, vatRate: v })}
+          />
+        </div>
+        <div className="space-y-2 mt-5">
+          <Label htmlFor="welcome" className="text-sm font-semibold text-slate-700">
+            رسالة الترحيب للمشتركين الجدد
+          </Label>
+          <textarea
+            id="welcome"
+            rows={3}
+            value={form.welcomeMessage}
+            onChange={(e) =>
+              setForm({ ...form, welcomeMessage: e.target.value })
+            }
+            className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-400 transition-all"
+          />
+        </div>
+      </SectionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">أسعار الباقات (ر.س/شهر)</CardTitle>
-        </CardHeader>
-        <CardContent className="grid sm:grid-cols-3 gap-4">
-          <PriceField
+      <SectionCard
+        icon={Wallet}
+        title="أسعار الباقات الشهرية"
+        subtitle="السعر الذي يدفعه المكتب شهرياً لكل باقة (ريال سعودي)"
+      >
+        <div className="grid sm:grid-cols-3 gap-5">
+          <PlanField
+            tone="slate"
             label="أساسي"
+            suffix="ر.س"
             value={form.basicPrice}
             onChange={(v) => setForm({ ...form, basicPrice: v })}
           />
-          <PriceField
+          <PlanField
+            tone="amber"
             label="احترافي"
+            suffix="ر.س"
             value={form.professionalPrice}
             onChange={(v) => setForm({ ...form, professionalPrice: v })}
           />
-          <PriceField
+          <PlanField
+            tone="emerald"
             label="مؤسسي"
+            suffix="ر.س"
             value={form.enterprisePrice}
             onChange={(v) => setForm({ ...form, enterprisePrice: v })}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </SectionCard>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">حدود التخزين لكل باقة (GB)</CardTitle>
-        </CardHeader>
-        <CardContent className="grid sm:grid-cols-3 gap-4">
-          <StorageField
+      <SectionCard
+        icon={HardDrive}
+        title="حدود التخزين لكل باقة"
+        subtitle="مساحة المستندات المتاحة لكل مكتب حسب باقته (جيجابايت)"
+      >
+        <div className="grid sm:grid-cols-3 gap-5">
+          <PlanField
+            tone="slate"
             label="أساسي"
+            suffix="GB"
             value={form.basicStorage}
             onChange={(v) => setForm({ ...form, basicStorage: v })}
           />
-          <StorageField
+          <PlanField
+            tone="amber"
             label="احترافي"
+            suffix="GB"
             value={form.professionalStorage}
             onChange={(v) => setForm({ ...form, professionalStorage: v })}
           />
-          <StorageField
+          <PlanField
+            tone="emerald"
             label="مؤسسي"
+            suffix="GB"
             value={form.enterpriseStorage}
             onChange={(v) => setForm({ ...form, enterpriseStorage: v })}
           />
+        </div>
+      </SectionCard>
+
+      <Card className="border-amber-200/70 bg-gradient-to-bl from-amber-50 to-amber-50/30">
+        <CardContent className="flex items-start gap-3 pt-6">
+          <div className="size-10 rounded-lg bg-amber-100 text-amber-700 grid place-items-center shrink-0">
+            <Info className="size-5" />
+          </div>
+          <div className="text-sm text-amber-900 leading-relaxed">
+            <p className="font-semibold mb-1">ملاحظة هامة</p>
+            <p>
+              تعديل أسعار الباقات وحدود التخزين هنا يطبَّق على المكاتب الجديدة
+              عند التسجيل فقط. المكاتب الحالية تحتفظ بأسعارها وحدودها الحالية
+              إلى أن تتم ترقية باقاتها يدوياً من صفحة كل مكتب.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-end gap-3 sticky bottom-0 bg-slate-50 -mx-6 px-6 py-3 border-t border-slate-200">
-        <Button
-          variant="outline"
-          onClick={() => router.refresh()}
-          disabled={mut.isPending}
-        >
-          <RefreshCw className="size-4" /> إعادة تحميل
-        </Button>
-        <Button onClick={() => mut.mutate()} loading={mut.isPending}>
-          <Save className="size-4" /> حفظ الإعدادات
-        </Button>
-      </div>
-
-      <Card className="bg-amber-50 border-amber-200">
-        <CardContent className="text-sm text-amber-900 pt-6">
-          <p className="font-medium mb-1">ملاحظة:</p>
-          <p>
-            تعديل أسعار الباقات وحدود التخزين هنا يطبَّق على المكاتب الجديدة
-            عند التسجيل. المكاتب الحالية تحتفظ بأسعارها وحدودها الحالية إلى أن
-            تتم ترقية باقاتها يدوياً من صفحة كل مكتب.
+      <div className="fixed bottom-0 inset-x-0 lg:right-64 z-30 bg-white/95 backdrop-blur border-t border-slate-200 px-6 py-4 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.08)]">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
+          <p className="text-xs text-slate-500 hidden sm:block">
+            تأكد من مراجعة الأسعار والحدود قبل الحفظ
           </p>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-3 ms-auto">
+            <Button
+              variant="outline"
+              onClick={() => router.refresh()}
+              disabled={mut.isPending}
+              size="lg"
+            >
+              <RefreshCw className="size-4" /> إعادة تحميل
+            </Button>
+            <Button
+              variant="admin"
+              onClick={() => mut.mutate()}
+              loading={mut.isPending}
+              size="lg"
+              className="px-8 shadow-gold ring-1 ring-amber-400/30"
+            >
+              {mut.isSuccess ? (
+                <CheckCircle2 className="size-5" />
+              ) : (
+                <Save className="size-5" />
+              )}
+              حفظ الإعدادات
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-function PriceField({
-  label,
-  value,
-  onChange,
+function SectionCard({
+  icon: Icon,
+  title,
+  subtitle,
+  children,
 }: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
+  icon: typeof Settings2;
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
 }) {
   return (
+    <Card className="rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+      <CardHeader className="border-b border-slate-100 bg-gradient-to-bl from-slate-50/70 to-white">
+        <div className="flex items-center gap-3">
+          <div className="size-11 rounded-xl bg-amber-100 text-amber-700 grid place-items-center shrink-0">
+            <Icon className="size-5" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-bold text-slate-900">
+              {title}
+            </CardTitle>
+            {subtitle && (
+              <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+            )}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-6">{children}</CardContent>
+    </Card>
+  );
+}
+
+function Field({
+  id,
+  label,
+  suffix,
+  value,
+  onChange,
+  ...rest
+}: {
+  id: string;
+  label: string;
+  suffix?: string;
+  value: string;
+  onChange: (v: string) => void;
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+  return (
     <div className="space-y-2">
-      <Label>{label}</Label>
+      <Label htmlFor={id} className="text-sm font-semibold text-slate-700">
+        {label}
+      </Label>
+      <div className="relative">
+        <Input
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-12 text-base ps-4 pe-14 rounded-lg focus:ring-2 focus:ring-amber-500"
+          {...rest}
+        />
+        {suffix && (
+          <span className="absolute end-4 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-500">
+            {suffix}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PlanField({
+  label,
+  suffix,
+  value,
+  onChange,
+  tone,
+}: {
+  label: string;
+  suffix: string;
+  value: string;
+  onChange: (v: string) => void;
+  tone: "slate" | "amber" | "emerald";
+}) {
+  const toneRing = {
+    slate: "ring-slate-200 from-slate-50",
+    amber: "ring-amber-200 from-amber-50",
+    emerald: "ring-emerald-200 from-emerald-50",
+  }[tone];
+  const toneText = {
+    slate: "text-slate-700",
+    amber: "text-amber-700",
+    emerald: "text-emerald-700",
+  }[tone];
+
+  return (
+    <div
+      className={cn(
+        "rounded-xl ring-1 bg-gradient-to-b to-white p-4 transition-all hover:shadow-sm",
+        toneRing,
+      )}
+    >
+      <div
+        className={cn("text-sm font-bold mb-3", toneText)}
+      >
+        {label}
+      </div>
       <div className="relative">
         <Input
           type="number"
           min={0}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pe-12"
+          className="h-12 text-lg font-bold tabular-nums ps-4 pe-14 rounded-lg focus:ring-2 focus:ring-amber-500"
         />
-        <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
-          ر.س
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function StorageField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <div className="relative">
-        <Input
-          type="number"
-          min={1}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="pe-10"
-        />
-        <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs text-slate-500">
-          GB
+        <span className="absolute end-4 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500">
+          {suffix}
         </span>
       </div>
     </div>

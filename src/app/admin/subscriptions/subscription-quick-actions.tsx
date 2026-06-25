@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { CalendarPlus, Gift, Play } from "lucide-react";
 import { toast } from "@/store/toast-store";
+import { cn } from "@/lib/utils";
 
 interface Props {
   tenantId: string;
@@ -24,6 +25,9 @@ async function callAction(
   if (!res.ok || !json.success) throw new Error(json.error ?? "فشل الإجراء");
   return json.data;
 }
+
+const PILL_BASE =
+  "inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold ring-1 transition-all duration-200 hover:scale-105 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100";
 
 export function SubscriptionQuickActions({ tenantId, status }: Props) {
   const router = useRouter();
@@ -59,29 +63,38 @@ export function SubscriptionQuickActions({ tenantId, status }: Props) {
   const trial = status === "TRIAL";
 
   return (
-    <div className="inline-flex items-center gap-1 justify-center">
+    <div className="inline-flex items-center gap-1.5 justify-center flex-wrap">
       {trial ? (
         <>
           <button
             onClick={() => extend.mutate(7)}
             disabled={pending}
-            className="px-2 py-1 rounded text-xs text-amber-700 hover:bg-amber-50 disabled:opacity-50 flex items-center gap-1"
+            className={cn(
+              PILL_BASE,
+              "bg-amber-50 text-amber-700 ring-amber-200 hover:bg-amber-100",
+            )}
             title="تمديد 7 أيام"
           >
-            <CalendarPlus className="size-3" />
+            <CalendarPlus className="size-3.5" />
             +7 ي
           </button>
           <button
             onClick={() => extend.mutate(14)}
             disabled={pending}
-            className="px-2 py-1 rounded text-xs text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+            className={cn(
+              PILL_BASE,
+              "bg-orange-50 text-orange-700 ring-orange-200 hover:bg-orange-100",
+            )}
           >
             +14 ي
           </button>
           <button
             onClick={() => extend.mutate(30)}
             disabled={pending}
-            className="px-2 py-1 rounded text-xs text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+            className={cn(
+              PILL_BASE,
+              "bg-rose-50 text-rose-700 ring-rose-200 hover:bg-rose-100",
+            )}
           >
             +30 ي
           </button>
@@ -91,23 +104,32 @@ export function SubscriptionQuickActions({ tenantId, status }: Props) {
           <button
             onClick={() => gift.mutate(1)}
             disabled={pending}
-            className="px-2 py-1 rounded text-xs text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 flex items-center gap-1"
+            className={cn(
+              PILL_BASE,
+              "bg-emerald-50 text-emerald-700 ring-emerald-200 hover:bg-emerald-100",
+            )}
             title="منح شهر"
           >
-            <Gift className="size-3" />
+            <Gift className="size-3.5" />
             +1 شهر
           </button>
           <button
             onClick={() => gift.mutate(3)}
             disabled={pending}
-            className="px-2 py-1 rounded text-xs text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+            className={cn(
+              PILL_BASE,
+              "bg-teal-50 text-teal-700 ring-teal-200 hover:bg-teal-100",
+            )}
           >
             +3 أشهر
           </button>
           <button
             onClick={() => gift.mutate(12)}
             disabled={pending}
-            className="px-2 py-1 rounded text-xs text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+            className={cn(
+              PILL_BASE,
+              "bg-cyan-50 text-cyan-700 ring-cyan-200 hover:bg-cyan-100",
+            )}
           >
             +سنة
           </button>
@@ -117,9 +139,12 @@ export function SubscriptionQuickActions({ tenantId, status }: Props) {
         <button
           onClick={() => activate.mutate()}
           disabled={pending}
-          className="px-2 py-1 rounded text-xs text-blue-700 hover:bg-blue-50 disabled:opacity-50 flex items-center gap-1"
+          className={cn(
+            PILL_BASE,
+            "bg-blue-50 text-blue-700 ring-blue-200 hover:bg-blue-100",
+          )}
         >
-          <Play className="size-3" /> تفعيل
+          <Play className="size-3.5" /> تفعيل
         </button>
       )}
     </div>
