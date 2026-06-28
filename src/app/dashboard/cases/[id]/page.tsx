@@ -360,48 +360,19 @@ export default async function CaseDetailPage({ params }: PageProps) {
         </TabsContent>
 
         <TabsContent value="finance">
-          {item.invoices.length === 0 ? (
-            <EmptyState
-              icon={Wallet}
-              title="لا توجد فواتير"
-              description="أنشئ فاتورة للعميل مرتبطة بهذه القضية"
-            />
-          ) : (
-            <Card className="overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-50 border-b">
-                  <tr className="text-right text-xs font-medium text-slate-500 uppercase">
-                    <th className="px-4 py-3">الفاتورة</th>
-                    <th className="px-4 py-3">الإجمالي</th>
-                    <th className="px-4 py-3">المدفوع</th>
-                    <th className="px-4 py-3">الحالة</th>
-                    <th className="px-4 py-3">الاستحقاق</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {item.invoices.map((inv) => (
-                    <tr key={inv.id}>
-                      <td className="px-4 py-3 font-mono text-xs">
-                        {inv.invoiceNumber}
-                      </td>
-                      <td className="px-4 py-3 tabular-nums">
-                        {formatCurrency(Number(inv.totalAmount))}
-                      </td>
-                      <td className="px-4 py-3 tabular-nums">
-                        {formatCurrency(Number(inv.paidAmount))}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge variant="secondary">{inv.status}</Badge>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">
-                        {formatDate(inv.dueDate)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
-          )}
+          <CaseFinanceTab
+            caseId={id}
+            clientId={item.client.id}
+            caseValue={item.value ? Number(item.value) : 0}
+            invoices={item.invoices.map((inv) => ({
+              id: inv.id,
+              invoiceNumber: inv.invoiceNumber,
+              totalAmount: Number(inv.totalAmount),
+              paidAmount: Number(inv.paidAmount),
+              status: inv.status,
+              dueDate: inv.dueDate,
+            }))}
+          />
         </TabsContent>
 
         <TabsContent value="timeline">
@@ -478,4 +449,149 @@ function activityLabel(action: string) {
     viewed: "اطّلع على القضية",
   };
   return map[action] ?? action;
+}
+
+interface FinanceInvoice {
+  id: string;
+  invoiceNumber: string;
+  totalAmount: number;
+  paidAmount: number;
+  status: string;
+  dueDate: Date;
+}
+
+function CaseFinanceTab({
+  caseId,
+  clientId,
+  caseValue,
+  invoices,
+}: {
+  caseId: string;
+  clientId: string;
+  caseValue: number;
+  invoices: FinanceInvoice[];
+}) {
+  const activeInvoices = invoices.filter((i) => i.status !== "CANCELLED");
+  const totalInvoiced = activeInvoices.reduce(
+    (s, i) => s + i.totalAmount,
+    0,
+  );
+  const totalPaid = activeInvoices.reduce((s, i) => s + i.paidAmount, 0);
+  const remaining = Math.max(0, totalInvoiced - totalPaid);
+  const exceedsCase = caseValue > 0 && totalInvoiced > caseValue;
+  const createUrl = `/dashboard/finance/invoices/new?clientId=${clientId}&caseId=${caseId}`;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
+          <SummaryTile
+            label="قيمة القضية"
+            value={caseValue > 0 ? formatCurrency(caseValue) : "—"}
+          />
+          <SummaryTile
+            label="إجمالي الفواتير"
+            value={formatCurrency(totalInvoiced)}
+            highlight={exceedsCase ? "warning" : undefined}
+          />
+          <SummaryTile
+            label="المدفوع"
+            value={formatCurrency(totalPaid)}
+            highlight="success"
+          />
+          <SummaryTile
+            label="المتبقي"
+            value={formatCurrency(remaining)}
+            highlight={remaining > 0 ? "warning" : undefined}
+          />
+        </div>
+        <Link href={createUrl}>
+          <Button>
+            <Wallet className="size-4" />
+            إنشاء فاتورة جديدة
+          </Button>
+        </Link>
+      </div>
+
+      {exceedsCase && (
+        <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+          ⚠️ إجمالي الفواتير ({formatCurrency(totalInvoiced)}) تجاوز قيمة القضية
+          الأصلية ({formatCurrency(caseValue)}).
+        </div>
+      )}
+
+      {invoices.length === 0 ? (
+        <EmptyState
+          icon={Wallet}
+          title="لا توجد فواتير"
+          description="أنشئ فاتورة للعميل مرتبطة بهذه القضية"
+        />
+      ) : (
+        <Card className="overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 border-b">
+              <tr className="text-right text-xs font-medium text-slate-500 uppercase">
+                <th className="px-4 py-3">الفاتورة</th>
+                <th className="px-4 py-3">الإجمالي</th>
+                <th className="px-4 py-3">المدفوع</th>
+                <th className="px-4 py-3">الحالة</th>
+                <th className="px-4 py-3">الاستحقاق</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {invoices.map((inv) => (
+                <tr key={inv.id}>
+                  <td className="px-4 py-3 font-mono text-xs">
+                    <Link
+                      href={`/dashboard/finance/invoices/${inv.id}`}
+                      className="text-brand-700 hover:underline"
+                    >
+                      {inv.invoiceNumber}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 tabular-nums">
+                    {formatCurrency(inv.totalAmount)}
+                  </td>
+                  <td className="px-4 py-3 tabular-nums">
+                    {formatCurrency(inv.paidAmount)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge variant="secondary">{inv.status}</Badge>
+                  </td>
+                  <td className="px-4 py-3 text-slate-600">
+                    {formatDate(inv.dueDate)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function SummaryTile({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  highlight?: "warning" | "success";
+}) {
+  const colorClass =
+    highlight === "warning"
+      ? "text-amber-700"
+      : highlight === "success"
+        ? "text-emerald-700"
+        : "text-slate-900";
+  return (
+    <Card>
+      <CardContent className="p-3">
+        <p className="text-xs text-slate-500">{label}</p>
+        <p className={`font-bold tabular-nums mt-1 ${colorClass}`}>{value}</p>
+      </CardContent>
+    </Card>
+  );
 }

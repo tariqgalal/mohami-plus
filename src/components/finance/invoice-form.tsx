@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,6 +31,19 @@ interface CaseOption {
   caseNumber: string;
   title: string;
   clientId: string;
+  value: string | number | null;
+}
+
+interface InvoiceLite {
+  id: string;
+  totalAmount: string | number;
+  status: string;
+}
+
+interface CaseDetail {
+  id: string;
+  value: string | number | null;
+  invoices: InvoiceLite[];
 }
 
 function useCaseOptions(clientId?: string) {
@@ -43,6 +57,19 @@ function useCaseOptions(clientId?: string) {
       return json.data.items as CaseOption[];
     },
     enabled: !!clientId,
+  });
+}
+
+function useCaseDetail(caseId?: string) {
+  return useQuery({
+    queryKey: ["case-detail-for-invoice", caseId ?? ""],
+    queryFn: async () => {
+      const res = await fetch(`/api/cases/${caseId}`);
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error);
+      return json.data as CaseDetail;
+    },
+    enabled: !!caseId,
   });
 }
 
@@ -65,6 +92,7 @@ export function InvoiceForm({ initial, mode }: InvoiceFormProps) {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<CreateInvoiceInput>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -82,14 +110,48 @@ export function InvoiceForm({ initial, mode }: InvoiceFormProps) {
   });
 
   const clientId = watch("clientId");
+  const caseId = watch("caseId");
   const amount = Number(watch("amount") || 0);
   const taxIncluded = watch("taxIncluded");
   const { data: cases } = useCaseOptions(clientId);
+  const { data: caseDetail } = useCaseDetail(caseId || undefined);
+
+  const caseValue = caseDetail?.value ? Number(caseDetail.value) : 0;
+  const lastAutofilledCase = useRef<string | null>(null);
+
+  // Auto-fill amount from case value (create mode only, once per case selection).
+  useEffect(() => {
+    if (mode !== "create") return;
+    if (!caseId || !caseDetail) return;
+    if (lastAutofilledCase.current === caseId) return;
+    if (caseValue > 0) {
+      setValue("amount", caseValue, { shouldValidate: true, shouldDirty: true });
+    }
+    lastAutofilledCase.current = caseId;
+  }, [caseId, caseDetail, caseValue, mode, setValue]);
+
+  const otherInvoicesTotal = caseDetail
+    ? caseDetail.invoices
+        .filter((inv) => inv.id !== initial?.id && inv.status !== "CANCELLED")
+        .reduce((sum, inv) => sum + Number(inv.totalAmount), 0)
+    : 0;
 
   const tax = taxIncluded ? +(amount * VAT_RATE).toFixed(2) : 0;
   const total = +(amount + tax).toFixed(2);
 
+  const exceedsCase =
+    caseValue > 0 && otherInvoicesTotal + total > caseValue;
+
   async function onSubmit(data: CreateInvoiceInput) {
+    if (exceedsCase) {
+      const remaining = Math.max(0, caseValue - otherInvoicesTotal);
+      const confirmed = window.confirm(
+        `إجمالي الفواتير سيتجاوز قيمة القضية (${formatCurrency(
+          caseValue,
+        )}). المتبقي قبل هذه الفاتورة: ${formatCurrency(remaining)}. هل تريد المتابعة؟`,
+      );
+      if (!confirmed) return;
+    }
     try {
       const payload = { ...data, caseId: data.caseId || null };
       if (mode === "create") {
@@ -167,6 +229,12 @@ export function InvoiceForm({ initial, mode }: InvoiceFormProps) {
             {errors.amount && (
               <p className="text-xs text-red-600">{errors.amount.message}</p>
             )}
+            {caseId && caseValue > 0 && (
+              <p className="text-xs text-slate-500">
+                القيمة الأصلية للقضية: {formatCurrency(caseValue)} — يمكنك تعديل
+                المبلغ
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -233,6 +301,23 @@ export function InvoiceForm({ initial, mode }: InvoiceFormProps) {
           </div>
         </CardContent>
       </Card>
+
+      {exceedsCase && (
+        <div className="flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+          <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-medium">
+              إجمالي الفواتير سيتجاوز قيمة القضية
+            </p>
+            <p className="text-xs mt-0.5">
+              قيمة القضية {formatCurrency(caseValue)} — الفواتير الأخرى{" "}
+              {formatCurrency(otherInvoicesTotal)} — هذه الفاتورة{" "}
+              {formatCurrency(total)}.
+              سيُطلب منك التأكيد قبل الحفظ.
+            </p>
+          </div>
+        </div>
+      )}
 
       {Object.keys(errors).length > 0 && (
         <div className="flex items-center gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
