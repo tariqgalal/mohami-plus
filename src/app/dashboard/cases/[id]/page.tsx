@@ -32,6 +32,8 @@ import { getTenantId } from "@/lib/tenant";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { CASE_TYPES, USER_ROLES } from "@/lib/constants";
 import { CaseDetailActions } from "@/components/cases/case-detail-actions";
+import { CasePrintButtons } from "@/components/cases/case-print-buttons";
+import { AttachmentInput } from "@/components/shared/attachment-input";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -71,7 +73,8 @@ export default async function CaseDetailPage({ params }: PageProps) {
           <h1 className="text-2xl font-bold text-slate-900">{item.title}</h1>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <CasePrintButtons caseId={id} />
           <Link href={`/dashboard/cases/${id}/edit`}>
             <Button>
               <Edit className="size-4" />
@@ -310,16 +313,29 @@ export default async function CaseDetailPage({ params }: PageProps) {
         </TabsContent>
 
         <TabsContent value="documents">
-          <div className="flex justify-end mb-3">
-            <CaseDetailActions caseId={id} variant="document" />
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-4">
+              <div className="flex justify-end">
+                <CaseDetailActions caseId={id} variant="document" />
+              </div>
+              {item.documents.length === 0 ? (
+                <EmptyState
+                  icon={FileText}
+                  title="لا توجد مستندات"
+                  description="ارفع توكيلات، عقود، أو أي مستندات تخص القضية"
+                />
+              ) : null}
+            </div>
+            <Card>
+              <CardContent className="p-4">
+                <AttachmentInput
+                  owner={{ caseId: id }}
+                  title="مرفقات (ملفات وروابط)"
+                />
+              </CardContent>
+            </Card>
           </div>
-          {item.documents.length === 0 ? (
-            <EmptyState
-              icon={FileText}
-              title="لا توجد مستندات"
-              description="ارفع توكيلات، عقود، أو أي مستندات تخص القضية"
-            />
-          ) : (
+          {item.documents.length > 0 && (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {item.documents.map((d) => (
                 <Card key={d.id}>

@@ -22,6 +22,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { EmptyState } from "@/components/shared/empty-state";
+import { AttachmentInput } from "@/components/shared/attachment-input";
 import {
   CaseStatusBadge,
   PriorityBadge,
@@ -137,6 +138,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
           <TabsTrigger value="invoices">
             الفواتير ({c._count.invoices})
           </TabsTrigger>
+          <TabsTrigger value="attachments">المرفقات</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -310,6 +312,17 @@ export default async function ClientDetailPage({ params }: PageProps) {
               </table>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="attachments">
+          <Card>
+            <CardContent className="p-4">
+              <AttachmentInput
+                owner={{ clientId: c.id }}
+                title="مستندات وروابط العميل"
+              />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
