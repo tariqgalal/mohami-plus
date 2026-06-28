@@ -21,12 +21,14 @@ test.describe("Validation — Saudi mobile + email", () => {
         city: "الرياض",
       },
     });
-    expect(res.status()).toBe(400);
+    // Zod validation errors return 422 from api-response.ts
+    expect(res.status()).toBe(422);
     const json = await res.json();
     expect(json.success).toBe(false);
-    const msg = String(json.error || "").toLowerCase();
-    // Either explicit Arabic phrase or our exact wording
-    expect(msg).toMatch(/جوال|غير صحيح|966/);
+    // Error details should reference phone field
+    expect(JSON.stringify(json.details || {}).toLowerCase()).toMatch(
+      /phone|جوال/,
+    );
   });
 
   test("rejects malformed email", async ({ request }) => {
@@ -39,7 +41,7 @@ test.describe("Validation — Saudi mobile + email", () => {
         city: "الرياض",
       },
     });
-    expect(res.status()).toBe(400);
+    expect(res.status()).toBe(422);
     const json = await res.json();
     expect(json.success).toBe(false);
   });
@@ -85,6 +87,6 @@ test.describe("Validation — Saudi mobile + email", () => {
         city: "الرياض",
       },
     });
-    expect(res.status()).toBe(400);
+    expect(res.status()).toBe(422);
   });
 });

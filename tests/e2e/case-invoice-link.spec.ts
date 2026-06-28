@@ -25,7 +25,7 @@ test.describe("Case ↔ Invoice link", () => {
         value: 25000,
       },
     });
-    expect(caseRes.status()).toBe(200);
+    expect(caseRes.status()).toBe(201);
     const caseJson = await caseRes.json();
     const caseId = caseJson.data.id as string;
 

@@ -46,7 +46,7 @@ test.describe("Attachments — link + tenant isolation", () => {
     const res = await request.post("/api/attachments", {
       data: { caseId, url: "not-a-url" },
     });
-    expect(res.status()).toBe(400);
+    expect(res.status()).toBe(422);
   });
 
   test("firm B cannot see firm A's attachment", async ({ request }) => {
