@@ -33,7 +33,7 @@ interface MeetingFormProps {
 interface AttendeeRow {
   userId?: string;
   externalName?: string;
-  externalEmail?: string;
+  externalEmail: string | null | undefined;
 }
 
 export function MeetingForm({ initial, mode }: MeetingFormProps) {
@@ -47,7 +47,7 @@ export function MeetingForm({ initial, mode }: MeetingFormProps) {
       userId: a.userId ?? undefined,
       externalName: a.externalName ?? undefined,
       externalEmail: a.externalEmail ?? undefined,
-    })) ?? [{ userId: undefined }],
+    })) ?? [{ userId: undefined, externalEmail: undefined }],
   );
   const [minutesFile, setMinutesFile] = useState<UploadedFileInfo | null>(
     initial?.minutesUrl
@@ -86,7 +86,7 @@ export function MeetingForm({ initial, mode }: MeetingFormProps) {
   const isVirtual = watch("isVirtual");
 
   function addAttendee() {
-    setAttendees([...attendees, { userId: undefined }]);
+    setAttendees([...attendees, { userId: undefined, externalEmail: undefined }]);
   }
 
   function removeAttendee(idx: number) {

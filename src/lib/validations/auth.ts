@@ -1,20 +1,25 @@
 import { z } from "zod";
+import {
+  emailSchema,
+  optionalEmailSchema,
+  saudiMobileSchema,
+} from "@/lib/validators";
 
 export const loginSchema = z.object({
-  email: z.email("البريد الإلكتروني غير صحيح"),
+  email: emailSchema,
   password: z.string().min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
 });
 
 export const registerFirmSchema = z
   .object({
     firmName: z.string().min(2, "اسم المكتب يجب أن يكون حرفين على الأقل"),
-    firmEmail: z.email("البريد الإلكتروني غير صحيح").optional(),
-    firmPhone: z.string().min(9, "رقم الهاتف غير صحيح"),
+    firmEmail: optionalEmailSchema,
+    firmPhone: saudiMobileSchema,
     city: z.string().min(2, "المدينة مطلوبة"),
     licenseNumber: z.string().optional(),
 
     adminName: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
-    adminEmail: z.email("البريد الإلكتروني غير صحيح"),
+    adminEmail: emailSchema,
     password: z
       .string()
       .min(8, "كلمة المرور يجب أن تكون 8 أحرف على الأقل")

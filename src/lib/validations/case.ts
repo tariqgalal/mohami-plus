@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { CaseType, CaseStatus, Priority } from "@prisma/client";
+import { optionalSaudiMobileSchema } from "@/lib/validators";
 
 const caseTypeEnum = z.enum(
   Object.values(CaseType) as [CaseType, ...CaseType[]],
@@ -15,7 +16,7 @@ export const opponentSchema = z.object({
   name: z.string().min(2, "اسم الخصم مطلوب"),
   type: z.string().optional().nullable(),
   lawyer: z.string().optional().nullable(),
-  phone: z.string().optional().nullable(),
+  phone: optionalSaudiMobileSchema,
   notes: z.string().optional().nullable(),
 });
 

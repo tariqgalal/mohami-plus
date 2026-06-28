@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { UserRole } from "@prisma/client";
+import { emailSchema, optionalSaudiMobileSchema } from "@/lib/validators";
 
 const roleEnum = z.enum(Object.values(UserRole) as [UserRole, ...UserRole[]]);
 
@@ -12,8 +13,8 @@ const fileUrlSchema = z
 
 export const createTeamMemberSchema = z.object({
   name: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
-  email: z.email("البريد الإلكتروني غير صحيح"),
-  phone: z.string().optional().nullable(),
+  email: emailSchema,
+  phone: optionalSaudiMobileSchema,
   role: roleEnum,
   specialization: z.string().optional().nullable(),
   password: z
@@ -27,7 +28,7 @@ export const createTeamMemberSchema = z.object({
 
 export const updateTeamMemberSchema = z.object({
   name: z.string().min(2).optional(),
-  phone: z.string().optional().nullable(),
+  phone: optionalSaudiMobileSchema,
   role: roleEnum.optional(),
   specialization: z.string().optional().nullable(),
   isActive: z.boolean().optional(),

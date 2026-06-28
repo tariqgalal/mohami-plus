@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  emailSchema,
+  optionalSaudiMobileSchema,
+} from "@/lib/validators";
 
 const fileUrlSchema = z
   .string()
@@ -9,7 +13,7 @@ const fileUrlSchema = z
 
 export const updateProfileSchema = z.object({
   name: z.string().min(2, "الاسم مطلوب"),
-  phone: z.string().optional().nullable(),
+  phone: optionalSaudiMobileSchema,
   specialization: z.string().optional().nullable(),
   avatar: fileUrlSchema.optional().nullable().or(z.literal("")),
 });
@@ -30,8 +34,8 @@ export const changePasswordSchema = z
 export const updateTenantSchema = z.object({
   name: z.string().min(2, "اسم المكتب مطلوب"),
   licenseNumber: z.string().optional().nullable(),
-  email: z.string().email("بريد إلكتروني غير صحيح"),
-  phone: z.string().optional().nullable(),
+  email: emailSchema,
+  phone: optionalSaudiMobileSchema,
   city: z.string().min(2, "المدينة مطلوبة"),
   address: z.string().optional().nullable(),
   logo: fileUrlSchema.optional().nullable().or(z.literal("")),

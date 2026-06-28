@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MeetingType, MeetingStatus } from "@prisma/client";
+import { optionalEmailSchema } from "@/lib/validators";
 
 const meetingTypeEnum = z.enum(
   Object.values(MeetingType) as [MeetingType, ...MeetingType[]],
@@ -11,12 +12,7 @@ const meetingStatusEnum = z.enum(
 export const attendeeSchema = z.object({
   userId: z.string().optional().nullable(),
   externalName: z.string().optional().nullable(),
-  externalEmail: z
-    .string()
-    .email("البريد غير صحيح")
-    .optional()
-    .nullable()
-    .or(z.literal("")),
+  externalEmail: optionalEmailSchema,
 });
 
 const fileUrlSchema = z

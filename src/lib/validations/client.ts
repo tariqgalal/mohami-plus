@@ -1,5 +1,10 @@
 import { z } from "zod";
 import { ClientType, ClientStatus } from "@prisma/client";
+import {
+  saudiMobileSchema,
+  optionalSaudiMobileSchema,
+  optionalEmailSchema,
+} from "@/lib/validators";
 
 const clientTypeEnum = z.enum(
   Object.values(ClientType) as [ClientType, ...ClientType[]],
@@ -20,14 +25,9 @@ export const createClientSchema = z.object({
   clientType: clientTypeEnum,
   contactPerson: z.string().optional().nullable(),
   nationalId: z.string().optional().nullable(),
-  email: z
-    .string()
-    .email("البريد الإلكتروني غير صحيح")
-    .optional()
-    .nullable()
-    .or(z.literal("")),
-  phone: z.string().min(9, "رقم الجوال يجب أن يكون 9 أرقام على الأقل"),
-  secondaryPhone: z.string().optional().nullable(),
+  email: optionalEmailSchema,
+  phone: saudiMobileSchema,
+  secondaryPhone: optionalSaudiMobileSchema,
   city: z.string().min(2, "المدينة مطلوبة"),
   address: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
