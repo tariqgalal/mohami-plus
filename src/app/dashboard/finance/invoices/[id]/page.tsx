@@ -60,6 +60,8 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
             invoiceId={inv.id}
             outstanding={outstanding}
             canRecordPayment={outstanding > 0 && inv.status !== "CANCELLED"}
+            clientEmail={inv.client.email}
+            clientPhone={inv.client.phone}
           />
           <Link href={`/dashboard/finance/invoices/${id}/edit`}>
             <Button>

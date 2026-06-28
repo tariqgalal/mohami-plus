@@ -364,6 +364,9 @@ model Invoice {
   dueDate       DateTime
   paidDate      DateTime?
   notes         String?
+  publicToken   String?       @unique
+  sentAt        DateTime?
+  sentTo        String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -545,4 +548,41 @@ enum TrialRenewalType {
   EXTEND_TRIAL
   GRANT_FREE_MONTHS
   CONVERT_TO_PAID
+}
+
+// ============ ATTACHMENTS (مرفقات: ملفات + روابط) ============
+
+model Attachment {
+  id          String         @id @default(cuid())
+  type        AttachmentType
+  // For uploads
+  storagePath String?
+  fileName    String?
+  fileSize    Int?
+  mimeType    String?
+  // For external links
+  url         String?
+  label       String?
+  // Polymorphic owner — exactly one of these is set
+  caseId      String?
+  clientId    String?
+  invoiceId   String?
+  sessionId   String?
+  meetingId   String?
+  // Always set
+  tenantId    String
+  uploadedBy  String
+  createdAt   DateTime       @default(now())
+
+  @@index([tenantId])
+  @@index([caseId])
+  @@index([clientId])
+  @@index([invoiceId])
+  @@index([sessionId])
+  @@index([meetingId])
+}
+
+enum AttachmentType {
+  UPLOAD
+  LINK
 }
