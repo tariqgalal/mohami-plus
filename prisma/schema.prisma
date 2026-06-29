@@ -38,16 +38,19 @@ model Tenant {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  users          User[]
-  cases          Case[]
-  clients        Client[]
-  sessions       CourtSession[]
-  meetings       Meeting[]
-  invoices       Invoice[]
-  documents      Document[]
-  activities     Activity[]
-  payments       Payment[]
-  trialRenewals  TrialRenewal[]
+  users         User[]
+  cases         Case[]
+  clients       Client[]
+  sessions      CourtSession[]
+  meetings      Meeting[]
+  invoices      Invoice[]
+  documents     Document[]
+  activities    Activity[]
+  payments      Payment[]
+  trialRenewals TrialRenewal[]
+
+  subscription     Subscription?
+  platformInvoices PlatformInvoice[]
 }
 
 enum Plan {
@@ -256,22 +259,22 @@ enum SessionStatus {
 // ============ CLIENTS ============
 
 model Client {
-  id              String       @id @default(cuid())
-  name            String
-  clientType      ClientType
-  contactPerson   String?
-  nationalId      String?
-  email           String?
-  phone           String
-  secondaryPhone  String?
-  city            String
-  address         String?
-  notes           String?      @db.Text
-  status          ClientStatus @default(ACTIVE)
-  idDocumentUrl   String?
-  idDocumentName  String?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id             String       @id @default(cuid())
+  name           String
+  clientType     ClientType
+  contactPerson  String?
+  nationalId     String?
+  email          String?
+  phone          String
+  secondaryPhone String?
+  city           String
+  address        String?
+  notes          String?      @db.Text
+  status         ClientStatus @default(ACTIVE)
+  idDocumentUrl  String?
+  idDocumentName String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
@@ -299,21 +302,21 @@ enum ClientStatus {
 // ============ MEETINGS ============
 
 model Meeting {
-  id           String        @id @default(cuid())
-  title        String
-  date         DateTime
-  time         String
-  duration     Int
-  meetingType  MeetingType
-  location     String?
-  isVirtual    Boolean       @default(false)
-  meetingLink  String?
-  notes        String?       @db.Text
-  minutesUrl   String?
-  minutesName  String?
-  status       MeetingStatus @default(SCHEDULED)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id          String        @id @default(cuid())
+  title       String
+  date        DateTime
+  time        String
+  duration    Int
+  meetingType MeetingType
+  location    String?
+  isVirtual   Boolean       @default(false)
+  meetingLink String?
+  notes       String?       @db.Text
+  minutesUrl  String?
+  minutesName String?
+  status      MeetingStatus @default(SCHEDULED)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
@@ -478,13 +481,13 @@ model Activity {
   @@index([createdAt])
 }
 
-// ============ PLATFORM PAYMENTS ============
+// ============ PLATFORM PAYMENTS (سجل كل عملية دفع مع Moyasar) ============
 
 model Payment {
   id          String   @id @default(cuid())
   amount      Decimal
   currency    String   @default("SAR")
-  status      String
+  status      String // paid / failed / pending / refunded
   provider    String   @default("moyasar")
   providerRef String?
   plan        Plan
@@ -494,7 +497,17 @@ model Payment {
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
+  // الحقول الجديدة للربط مع Moyasar والفواتير
+  subscriptionId    String?
+  platformInvoiceId String?
+  moyasarPaymentId  String? @unique
+  amountHalalat     Int? // المبلغ بالهللات (أصغر وحدة) — للحسابات الدقيقة
+  paymentMethod     String? // creditcard / mada / applepay / stcpay / samsungpay
+  errorMessage      String? @db.Text
+
   @@index([tenantId])
+  @@index([platformInvoiceId])
+  @@index([subscriptionId])
 }
 
 // ============ PLATFORM SETTINGS ============
@@ -526,19 +539,19 @@ model Notification {
 // ============ TRIAL RENEWAL LOG ============
 
 model TrialRenewal {
-  id          String             @id @default(cuid())
+  id          String           @id @default(cuid())
   type        TrialRenewalType
   days        Int
-  reason      String?            @db.Text
+  reason      String?          @db.Text
   previousEnd DateTime?
   newEnd      DateTime
-  createdAt   DateTime           @default(now())
+  createdAt   DateTime         @default(now())
 
-  tenantId    String
-  tenant      Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   grantedById String
-  grantedBy   User               @relation("TrialRenewalGrantor", fields: [grantedById], references: [id])
+  grantedBy   User   @relation("TrialRenewalGrantor", fields: [grantedById], references: [id])
 
   @@index([tenantId])
   @@index([createdAt])
@@ -585,4 +598,136 @@ model Attachment {
 enum AttachmentType {
   UPLOAD
   LINK
+}
+
+// ============ SUBSCRIPTIONS (اشتراك المكتب في المنصة) ============
+
+model Subscription {
+  id       String @id @default(cuid())
+  tenantId String @unique
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  plan        Plan
+  status      SubscriptionStatus @default(TRIALING)
+  billingType BillingType        @default(MANUAL)
+
+  trialEndsAt        DateTime?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  graceUntil         DateTime? // فترة سماح بعد فشل الدفع (7 أيام)
+
+  // Tokenization — يتعبّى فقط لو billingType = AUTO_RENEW وبعد أول دفعة ناجحة
+  moyasarTokenId String?
+  cardLastFour   String?
+  cardBrand      String? // visa / mada / mastercard / amex
+
+  // محاولات الخصم التلقائي الفاشلة
+  failedAttempts Int       @default(0)
+  lastAttemptAt  DateTime?
+  nextAttemptAt  DateTime?
+
+  canceledAt   DateTime?
+  cancelReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices PlatformInvoice[]
+
+  @@index([status])
+  @@index([nextAttemptAt])
+  @@index([currentPeriodEnd])
+}
+
+enum SubscriptionStatus {
+  TRIALING // فترة تجريبية
+  ACTIVE // مدفوع ونشط
+  PAST_DUE // فشل آخر دفع — في فترة سماح
+  CANCELED // ألغاه العميل (يكمل لنهاية الفترة)
+  EXPIRED // انتهى ولم يجدد
+}
+
+enum BillingType {
+  AUTO_RENEW // خصم تلقائي من كارت محفوظ
+  MANUAL // فاتورة شهرية + رابط دفع
+}
+
+// ============ PLATFORM INVOICES (فواتير اشتراك المنصة — منفصلة عن Invoice الخاصة بالمكاتب) ============
+
+model PlatformInvoice {
+  id            String @id @default(cuid())
+  invoiceNumber String @unique // MP-YYYY-NNNNNN
+
+  tenantId       String
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  plan        Plan
+  // كل المبالغ بالهللات (Int) لتجنب أخطاء التقريب
+  baseAmount  Int // 19900 = 199.00 ر.س
+  vatAmount   Int // 2985  = 29.85 ر.س
+  totalAmount Int // 22885 = 228.85 ر.س
+  vatRate     Int    @default(1500) // 15.00 × 100 (basis points)
+  currency    String @default("SAR")
+
+  status      PlatformInvoiceStatus @default(PENDING)
+  periodStart DateTime
+  periodEnd   DateTime
+  issueDate   DateTime              @default(now())
+  dueDate     DateTime
+
+  // ربط Moyasar
+  moyasarPaymentId String?   @unique
+  paymentMethod    String? // creditcard / mada / applepay / stcpay / samsungpay
+  paidAt           DateTime?
+
+  // رابط الدفع العام (للفاتورة اليدوية — يُرسل بإيميل/واتساب)
+  publicToken String?   @unique
+  sentAt      DateTime?
+  sentToEmail String?
+  sentToPhone String?
+
+  // ملاحظات داخلية + سجل المحاولات / أخطاء Moyasar
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+enum PlatformInvoiceStatus {
+  PENDING // مستحقة الدفع
+  PAID // مدفوعة
+  FAILED // فشل الدفع
+  REFUNDED // مُستردة
+  CANCELED // ملغاة
+}
+
+// ============ WEBHOOK EVENTS (لمنع المعالجة المكررة من Moyasar) ============
+
+model WebhookEvent {
+  id             String    @id @default(cuid())
+  moyasarEventId String    @unique // الـ id من جسم الـ webhook
+  eventType      String // payment_paid / payment_failed / ...
+  payload        Json
+  status         String    @default("RECEIVED") // RECEIVED / PROCESSED / FAILED
+  error          String?   @db.Text
+  receivedAt     DateTime  @default(now())
+  processedAt    DateTime?
+
+  @@index([eventType])
+  @@index([status])
+  @@index([receivedAt])
+}
+
+// ============ PLATFORM INVOICE NUMBER COUNTER (تسلسل آمن لأرقام الفواتير) ============
+
+model PlatformInvoiceCounter {
+  year    Int @id // السنة الميلادية (مثلاً 2026)
+  current Int @default(0) // آخر رقم استُخدم
 }

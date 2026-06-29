@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   Landmark,
+  CreditCard,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { APP_NAME, USER_ROLES } from "@/lib/constants";
@@ -32,6 +33,7 @@ const NAV = [
   { href: "/dashboard/documents", label: "المستندات", icon: FileText },
   { href: "/dashboard/reports", label: "التقارير", icon: BarChart3 },
   { href: "/dashboard/najiz", label: "ناجز", icon: Landmark },
+  { href: "/dashboard/billing", label: "الاشتراك والفوترة", icon: CreditCard },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];
 
