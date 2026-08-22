@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { MeetingType, MeetingStatus } from "@prisma/client";
 import { optionalEmailSchema } from "@/lib/validators";
 

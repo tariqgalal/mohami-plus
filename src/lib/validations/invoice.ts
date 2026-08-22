@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { InvoiceStatus, PaymentMethod } from "@prisma/client";
 
 const invoiceStatusEnum = z.enum(

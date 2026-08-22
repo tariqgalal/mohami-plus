@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 
 // Saudi mobile: accepts 05XXXXXXXX, 5XXXXXXXX, +9665XXXXXXXX, 009665XXXXXXXX
 // with or without spaces / hyphens / parentheses. Normalizes to +9665XXXXXXXX.

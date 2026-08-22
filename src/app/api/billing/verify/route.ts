@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { getTenantId } from "@/lib/tenant";
 import { prisma } from "@/lib/prisma";

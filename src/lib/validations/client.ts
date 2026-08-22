@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { ClientType, ClientStatus } from "@prisma/client";
 import {
   saudiMobileSchema,

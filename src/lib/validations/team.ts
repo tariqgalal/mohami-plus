@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { UserRole } from "@prisma/client";
 import { emailSchema, optionalSaudiMobileSchema } from "@/lib/validators";
 

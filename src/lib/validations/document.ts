@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { DocCategory } from "@prisma/client";
 
 const categoryEnum = z.enum(

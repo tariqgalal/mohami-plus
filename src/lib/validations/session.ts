@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { SessionType, SessionStatus } from "@prisma/client";
 
 const sessionTypeEnum = z.enum(

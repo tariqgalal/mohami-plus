@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { apiSuccess, handleApiError } from "@/lib/api-response";
 import { requireSuperAdmin } from "@/lib/tenant";
 import {

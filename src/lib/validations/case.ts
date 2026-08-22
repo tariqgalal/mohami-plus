@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/lib/zod";
 import { CaseType, CaseStatus, Priority } from "@prisma/client";
 import { optionalSaudiMobileSchema } from "@/lib/validators";
 
