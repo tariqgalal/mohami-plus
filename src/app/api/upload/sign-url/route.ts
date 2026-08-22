@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!isStorageConfigured()) {
-      return apiError("تخزين الملفات غير مهيأ", 503);
+      return apiError("خدمة الملفات غير متاحة حالياً", 503);
     }
 
     if (!pathBelongsToTenant(filePath, tenantId)) {

@@ -105,7 +105,13 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Fallback محلي للتطوير لما Supabase Storage مش متضبط
+    // في الإنتاج: لا نكتب على نظام الملفات المحلي (Vercel للقراءة فقط ولا يبقى
+    // بين النشرات). لو Supabase Storage غير مهيأ نرجّع رسالة واضحة للمستخدم.
+    if (process.env.NODE_ENV === "production") {
+      return apiError("خدمة رفع الملفات غير متاحة حالياً", 503);
+    }
+
+    // Fallback محلي للتطوير فقط لما Supabase Storage مش متضبط
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, "0");
