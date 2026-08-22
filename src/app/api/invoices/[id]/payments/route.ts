@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { recordPaymentSchema } from "@/lib/validations/invoice";
 import { recordPayment } from "@/services/invoice-service";
 
@@ -11,7 +12,7 @@ interface RouteCtx {
 export async function POST(req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("INVOICE_MANAGE");
     const { id } = await ctx.params;
     const body = await req.json();
     const data = recordPaymentSchema.parse(body);

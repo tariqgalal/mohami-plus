@@ -1,5 +1,6 @@
 import { apiSuccess, handleApiError } from "@/lib/api-response";
 import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { getOrCreateSubscription } from "@/services/subscription-service";
 import { prisma } from "@/lib/prisma";
 import { isTokenizationEnabled } from "@/lib/moyasar";
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    await requirePermission("BILLING_MANAGE");
     const tenantId = await getTenantId();
     const sub = await getOrCreateSubscription(tenantId);
 

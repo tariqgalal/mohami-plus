@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   createSessionSchema,
   sessionFiltersSchema,
@@ -12,6 +13,7 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
+    await requirePermission("SESSION_READ");
     const tenantId = await getTenantId();
     const filters = sessionFiltersSchema.parse(
       Object.fromEntries(req.nextUrl.searchParams),
@@ -26,7 +28,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("SESSION_CREATE");
     const body = await req.json();
     const data = createSessionSchema.parse(body);
     const created = await createSession(tenantId, user.id, data);

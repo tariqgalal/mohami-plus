@@ -176,21 +176,18 @@ export async function deleteClient(
     include: { _count: { select: { cases: true } } },
   });
   if (!existing) return null;
-  if (existing._count.cases > 0) {
-    throw new Error("لا يمكن حذف عميل لديه قضايا. أغلق القضايا أولاً.");
-  }
-
   await prisma.$transaction([
+    prisma.client.update({ where: { id }, data: { status: "INACTIVE" } }),
     prisma.activity.create({
       data: {
         tenantId,
         userId,
-        action: "deleted",
+        action: "archived",
         entity: "client",
         entityId: id,
+        details: JSON.stringify({ previousStatus: existing.status }),
       },
     }),
-    prisma.client.delete({ where: { id } }),
   ]);
   return existing;
 }

@@ -1,7 +1,5 @@
 import { NextRequest } from "next/server";
-import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getTenantId } from "@/lib/tenant";
-import { deleteAttachment } from "@/services/attachment-service";
+import { apiError, handleApiError } from "@/lib/api-response";
 
 interface RouteCtx {
   params: Promise<{ id: string }>;
@@ -9,11 +7,8 @@ interface RouteCtx {
 
 export async function DELETE(_req: NextRequest, ctx: RouteCtx) {
   try {
-    const tenantId = await getTenantId();
-    const { id } = await ctx.params;
-    const removed = await deleteAttachment(tenantId, id);
-    if (!removed) return apiError("المرفق غير موجود", 404);
-    return apiSuccess({ id });
+    await ctx.params;
+    return apiError("الحذف النهائي للمرفقات معطّل حفاظاً على السجل", 403);
   } catch (error) {
     return handleApiError(error);
   }

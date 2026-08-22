@@ -30,8 +30,8 @@ export default async function SettingsPage() {
         <TabsList>
           <TabsTrigger value="profile">الملف الشخصي</TabsTrigger>
           <TabsTrigger value="security">الأمان</TabsTrigger>
-          <TabsTrigger value="firm">المكتب</TabsTrigger>
-          <TabsTrigger value="subscription">الاشتراك</TabsTrigger>
+          {isFirmAdmin && <TabsTrigger value="firm">المكتب</TabsTrigger>}
+          {isFirmAdmin && <TabsTrigger value="subscription">الاشتراك</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="profile">
@@ -42,13 +42,17 @@ export default async function SettingsPage() {
           <PasswordForm />
         </TabsContent>
 
-        <TabsContent value="firm">
-          <TenantForm canEdit={isFirmAdmin} />
-        </TabsContent>
+        {isFirmAdmin && (
+          <TabsContent value="firm">
+            <TenantForm canEdit />
+          </TabsContent>
+        )}
 
-        <TabsContent value="subscription">
-          <SubscriptionCard />
-        </TabsContent>
+        {isFirmAdmin && (
+          <TabsContent value="subscription">
+            <SubscriptionCard />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

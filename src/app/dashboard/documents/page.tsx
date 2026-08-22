@@ -220,8 +220,8 @@ export default function DocumentsPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label="حذف"
-                    onClick={() => setConfirmId(doc.id)}
+                    aria-label="الحذف غير متاح"
+                    disabled
                   >
                     <Trash2 className="size-4 text-red-500" />
                   </Button>
@@ -247,9 +247,9 @@ export default function DocumentsPage() {
       <ConfirmDialog
         open={!!confirmId}
         onOpenChange={(o) => !o && setConfirmId(null)}
-        title="حذف المستند"
-        description="هل أنت متأكد من حذف هذا المستند؟ سيتم حذف السجل فقط — الملف الأصلي لا يُحذف."
-        confirmText="حذف"
+        title="الحذف غير متاح"
+        description="الحذف النهائي للمستندات معطّل حفاظاً على السجل القانوني."
+        confirmText="مغلق"
         loading={deleteMutation.isPending}
         onConfirm={handleDelete}
       />

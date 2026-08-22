@@ -234,21 +234,20 @@ export async function deleteInvoice(
   });
   if (!existing) return null;
   if (Number(existing.paidAmount) > 0) {
-    throw new Error("لا يمكن حذف فاتورة بها مدفوعات");
+    throw new Error("لا يمكن إلغاء فاتورة بها مدفوعات");
   }
 
   await prisma.$transaction([
-    prisma.paymentRecord.deleteMany({ where: { invoiceId: id } }),
+    prisma.invoice.update({ where: { id }, data: { status: "CANCELLED" } }),
     prisma.activity.create({
       data: {
         tenantId,
         userId,
-        action: "deleted",
+        action: "voided",
         entity: "invoice",
         entityId: id,
       },
     }),
-    prisma.invoice.delete({ where: { id } }),
   ]);
   return existing;
 }

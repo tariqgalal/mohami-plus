@@ -102,10 +102,7 @@ export async function createLinkAttachment(
 }
 
 export async function deleteAttachment(tenantId: string, id: string) {
-  const existing = await prisma.attachment.findFirst({
-    where: { id, tenantId },
-  });
-  if (!existing) return null;
-  await prisma.attachment.delete({ where: { id } });
-  return existing;
+  void tenantId;
+  void id;
+  throw new Error("الحذف النهائي للمرفقات غير مدعوم");
 }

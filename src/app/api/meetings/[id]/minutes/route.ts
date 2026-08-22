@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { recordMinutesSchema } from "@/lib/validations/meeting";
 import { recordMeetingMinutes } from "@/services/meeting-service";
 
@@ -11,7 +12,7 @@ interface RouteCtx {
 export async function POST(req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("MEETING_RECORD_MINUTES");
     const { id } = await ctx.params;
     const body = await req.json();
     const data = recordMinutesSchema.parse(body);

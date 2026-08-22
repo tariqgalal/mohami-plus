@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import {
   createTeamMemberSchema,
@@ -11,6 +12,7 @@ import { createTeamMember, listTeam } from "@/services/team-service";
 // النمط البسيط للاستخدام في dropdowns
 export async function GET(req: NextRequest) {
   try {
+    await requirePermission("TEAM_READ");
     const tenantId = await getTenantId();
     const params = req.nextUrl.searchParams;
 
@@ -41,10 +43,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
-    if (user.role !== "FIRM_ADMIN") {
-      return apiError("صلاحيات مدير المكتب مطلوبة", 403);
-    }
+    const user = await requirePermission("TEAM_MANAGE");
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
       select: { maxUsers: true },

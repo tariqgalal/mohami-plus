@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   attachmentFilterSchema,
   createLinkAttachmentSchema,
@@ -20,6 +21,7 @@ const OWNER_KEYS = [
 
 export async function GET(req: NextRequest) {
   try {
+    await requirePermission("DOCUMENT_READ");
     const tenantId = await getTenantId();
     const params: Record<string, string | undefined> = {};
     for (const k of OWNER_KEYS) {
@@ -37,7 +39,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("DOCUMENT_UPLOAD");
     const body = await req.json();
     const data = createLinkAttachmentSchema.parse(body);
     const created = await createLinkAttachment(tenantId, user.id, data);

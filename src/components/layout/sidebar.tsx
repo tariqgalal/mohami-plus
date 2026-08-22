@@ -20,20 +20,21 @@ import {
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { APP_NAME, USER_ROLES } from "@/lib/constants";
+import { hasPermission, type Permission } from "@/lib/permissions";
 import type { UserRole } from "@prisma/client";
 
-const NAV = [
+const NAV: Array<{ href: string; label: string; icon: typeof LayoutDashboard; permission?: Permission }> = [
   { href: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
   { href: "/dashboard/cases", label: "القضايا", icon: Briefcase },
   { href: "/dashboard/sessions", label: "الجلسات", icon: Gavel },
   { href: "/dashboard/clients", label: "العملاء", icon: Users },
-  { href: "/dashboard/team", label: "الفريق", icon: UserCog },
+  { href: "/dashboard/team", label: "الفريق", icon: UserCog, permission: "TEAM_READ" },
   { href: "/dashboard/meetings", label: "الاجتماعات", icon: CalendarDays },
-  { href: "/dashboard/finance", label: "المالية", icon: Wallet },
+  { href: "/dashboard/finance", label: "المالية", icon: Wallet, permission: "FINANCE_READ" },
   { href: "/dashboard/documents", label: "المستندات", icon: FileText },
-  { href: "/dashboard/reports", label: "التقارير", icon: BarChart3 },
+  { href: "/dashboard/reports", label: "التقارير", icon: BarChart3, permission: "REPORTS_READ" },
   { href: "/dashboard/najiz", label: "ناجز", icon: Landmark },
-  { href: "/dashboard/billing", label: "الاشتراك والفوترة", icon: CreditCard },
+  { href: "/dashboard/billing", label: "الاشتراك والفوترة", icon: CreditCard, permission: "BILLING_MANAGE" },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];
 
@@ -52,7 +53,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-        {NAV.map((item) => {
+        {NAV.filter((item) => !item.permission || (user && hasPermission(user.role as UserRole, item.permission))).map((item) => {
           const Icon = item.icon;
           const active =
             item.href === "/dashboard"

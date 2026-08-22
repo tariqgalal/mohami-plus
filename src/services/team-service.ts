@@ -238,23 +238,17 @@ export async function deleteTeamMember(
     include: { _count: { select: { assignedCases: true } } },
   });
   if (!existing) return null;
-  if (existing._count.assignedCases > 0) {
-    throw new Error(
-      "لا يمكن حذف عضو معيّن على قضايا. عيّن قضاياه لمحامي آخر أولاً.",
-    );
-  }
-
   await prisma.$transaction([
+    prisma.user.update({ where: { id }, data: { isActive: false } }),
     prisma.activity.create({
       data: {
         tenantId,
         userId: currentUserId,
-        action: "deleted",
+        action: "deactivated",
         entity: "user",
         entityId: id,
       },
     }),
-    prisma.user.delete({ where: { id } }),
   ]);
   return existing;
 }

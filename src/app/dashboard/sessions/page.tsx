@@ -69,10 +69,10 @@ export default function SessionsPage() {
     if (!confirmId) return;
     try {
       await deleteMutation.mutateAsync(confirmId);
-      toast.success("تم حذف الجلسة");
+      toast.success("تم إلغاء الجلسة مع الاحتفاظ بسجلها");
       setConfirmId(null);
     } catch (e: any) {
-      toast.error(e.message || "فشل حذف الجلسة");
+      toast.error(e.message || "فشل إلغاء الجلسة");
     }
   }
 
@@ -334,7 +334,7 @@ export default function SessionsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="حذف"
+                          aria-label="إلغاء"
                           onClick={() => setConfirmId(s.id)}
                         >
                           <Trash2 className="size-4 text-red-500" />
@@ -363,9 +363,9 @@ export default function SessionsPage() {
       <ConfirmDialog
         open={!!confirmId}
         onOpenChange={(o) => !o && setConfirmId(null)}
-        title="حذف الجلسة"
-        description="هل أنت متأكد من حذف هذه الجلسة؟ لا يمكن التراجع."
-        confirmText="حذف"
+        title="إلغاء الجلسة"
+        description="سيُحتفظ بسجل الجلسة وتُغيّر حالتها إلى ملغاة."
+        confirmText="إلغاء الجلسة"
         loading={deleteMutation.isPending}
         onConfirm={handleDelete}
       />

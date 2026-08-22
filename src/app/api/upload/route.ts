@@ -3,7 +3,8 @@ import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
 import { apiSuccess, handleApiError, apiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   isStorageConfigured,
   uploadFile,
@@ -61,7 +62,7 @@ function sanitizeName(name: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    await getCurrentUser();
+    await requirePermission("DOCUMENT_UPLOAD");
     const tenantId = await getTenantId();
 
     const form = await req.formData();

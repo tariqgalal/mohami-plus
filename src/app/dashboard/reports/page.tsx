@@ -9,7 +9,9 @@ import {
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getTenantId } from "@/lib/tenant";
+import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { hasPermission } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 import { getReportsOverview } from "@/services/reports-service";
 import { getFinanceStats } from "@/services/invoice-service";
 import { CASE_STATUS, CASE_TYPES, USER_ROLES } from "@/lib/constants";
@@ -20,6 +22,8 @@ import { CasesBarChart } from "@/components/charts/cases-bar-chart";
 import { MonthlyLineChart } from "@/components/charts/monthly-line-chart";
 
 export default async function ReportsPage() {
+  const user = await getCurrentUser();
+  if (!hasPermission(user.role, "REPORTS_READ")) redirect("/dashboard");
   const tenantId = await getTenantId();
   const [overview, finance] = await Promise.all([
     getReportsOverview(tenantId),

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   createDocumentSchema,
   documentFiltersSchema,
@@ -9,6 +10,7 @@ import { createDocument, listDocuments } from "@/services/document-service";
 
 export async function GET(req: NextRequest) {
   try {
+    await requirePermission("DOCUMENT_READ");
     const tenantId = await getTenantId();
     const filters = documentFiltersSchema.parse(
       Object.fromEntries(req.nextUrl.searchParams),
@@ -23,7 +25,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("DOCUMENT_UPLOAD");
     const body = await req.json();
     const data = createDocumentSchema.parse(body);
     const created = await createDocument(tenantId, user.id, data);

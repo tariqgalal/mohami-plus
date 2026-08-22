@@ -136,28 +136,9 @@ export async function updateDocument(
 }
 
 export async function deleteDocument(
-  tenantId: string,
-  userId: string,
-  id: string,
+  _tenantId: string,
+  _userId: string,
+  _id: string,
 ) {
-  const existing = await prisma.document.findFirst({
-    where: { id, tenantId },
-    select: { id: true, caseId: true },
-  });
-  if (!existing) return null;
-
-  await prisma.$transaction([
-    prisma.activity.create({
-      data: {
-        tenantId,
-        userId,
-        action: "deleted",
-        entity: "document",
-        entityId: id,
-        caseId: existing.caseId,
-      },
-    }),
-    prisma.document.delete({ where: { id } }),
-  ]);
-  return existing;
+  throw new Error("الحذف النهائي للمستندات غير مدعوم");
 }

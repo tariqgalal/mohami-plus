@@ -48,10 +48,10 @@ export default function ClientsPage() {
     if (!confirmId) return;
     try {
       await deleteMutation.mutateAsync(confirmId);
-      toast.success("تم حذف العميل");
+      toast.success("تمت أرشفة العميل");
       setConfirmId(null);
     } catch (e: any) {
-      toast.error(e.message || "فشل حذف العميل");
+      toast.error(e.message || "فشلت أرشفة العميل");
     }
   }
 
@@ -300,7 +300,7 @@ export default function ClientsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="حذف"
+                          aria-label="أرشفة"
                           onClick={() => setConfirmId(c.id)}
                         >
                           <Trash2 className="size-4 text-red-500" />
@@ -329,9 +329,9 @@ export default function ClientsPage() {
       <ConfirmDialog
         open={!!confirmId}
         onOpenChange={(o) => !o && setConfirmId(null)}
-        title="حذف العميل"
-        description="هل أنت متأكد؟ لا يمكن التراجع. لن يتم الحذف إذا كان للعميل قضايا."
-        confirmText="حذف"
+        title="أرشفة العميل"
+        description="سيُحتفظ بسجل العميل وتُحوّل حالته إلى غير نشط."
+        confirmText="أرشفة"
         loading={deleteMutation.isPending}
         onConfirm={handleDelete}
       />

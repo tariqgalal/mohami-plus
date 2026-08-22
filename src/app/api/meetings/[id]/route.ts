@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { updateMeetingSchema } from "@/lib/validations/meeting";
 import {
   deleteMeeting,
@@ -14,6 +15,7 @@ interface RouteCtx {
 
 export async function GET(_req: NextRequest, ctx: RouteCtx) {
   try {
+    await requirePermission("MEETING_READ");
     const tenantId = await getTenantId();
     const { id } = await ctx.params;
     const item = await getMeeting(tenantId, id);
@@ -27,7 +29,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 export async function PUT(req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("MEETING_UPDATE");
     const { id } = await ctx.params;
     const body = await req.json();
     const data = updateMeetingSchema.parse(body);
@@ -42,7 +44,7 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
 export async function DELETE(_req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("MEETING_UPDATE");
     const { id } = await ctx.params;
     const deleted = await deleteMeeting(tenantId, user.id, id);
     if (!deleted) return apiError("الاجتماع غير موجود", 404);

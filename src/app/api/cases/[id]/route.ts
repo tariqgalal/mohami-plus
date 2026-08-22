@@ -1,9 +1,9 @@
 import { NextRequest } from "next/server";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
-import { getTenantId, getCurrentUser } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { updateCaseSchema } from "@/lib/validations/case";
 import {
-  deleteCase,
   getCase,
   updateCase,
 } from "@/services/case-service";
@@ -14,6 +14,7 @@ interface RouteCtx {
 
 export async function GET(_req: NextRequest, ctx: RouteCtx) {
   try {
+    await requirePermission("CASE_READ");
     const tenantId = await getTenantId();
     const { id } = await ctx.params;
     const item = await getCase(tenantId, id);
@@ -27,7 +28,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 export async function PUT(req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("CASE_UPDATE");
     const { id } = await ctx.params;
     const body = await req.json();
     const data = updateCaseSchema.parse(body);
@@ -41,12 +42,8 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
 
 export async function DELETE(_req: NextRequest, ctx: RouteCtx) {
   try {
-    const tenantId = await getTenantId();
-    const user = await getCurrentUser();
-    const { id } = await ctx.params;
-    const deleted = await deleteCase(tenantId, user.id, id);
-    if (!deleted) return apiError("القضية غير موجودة", 404);
-    return apiSuccess({ id });
+    await ctx.params;
+    return apiError("الحذف النهائي للقضايا معطّل حفاظاً على سجل القضية", 403);
   } catch (error) {
     return handleApiError(error);
   }

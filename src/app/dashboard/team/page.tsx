@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import {
   UserCog,
@@ -32,11 +33,15 @@ import {
   useToggleTeamMemberActive,
 } from "@/hooks/use-team-list";
 import { USER_ROLES } from "@/lib/constants";
+import { hasPermission } from "@/lib/permissions";
+import type { UserRole } from "@prisma/client";
 import { formatRelativeTime, formatDate } from "@/lib/format";
 import { toast } from "@/store/toast-store";
 import type { TeamFiltersInput } from "@/lib/validations/team";
 
 export default function TeamPage() {
+  const { data: session } = useSession();
+  const canManage = !!session?.user && hasPermission(session.user.role as UserRole, "TEAM_MANAGE");
   const [filters, setFilters] = useState<Partial<TeamFiltersInput>>({
     page: 1,
     limit: 20,
@@ -92,12 +97,12 @@ export default function TeamPage() {
             إدارة المحامين والموظفين والصلاحيات
           </p>
         </div>
-        <Link href="/dashboard/team/new">
+        {canManage && <Link href="/dashboard/team/new">
           <Button>
             <Plus className="size-4" />
             عضو جديد
           </Button>
-        </Link>
+        </Link>}
       </div>
 
       <Card className="p-4">
@@ -175,7 +180,7 @@ export default function TeamPage() {
               : "أضف محامين وموظفين لمكتبك"
           }
           action={
-            !hasFilters && (
+            !hasFilters && canManage && (
               <Link href="/dashboard/team/new">
                 <Button>
                   <Plus className="size-4" />
@@ -266,12 +271,12 @@ export default function TeamPage() {
                     <Eye className="size-4" />
                   </Button>
                 </Link>
-                <Link href={`/dashboard/team/${m.id}/edit`}>
+                {canManage && <Link href={`/dashboard/team/${m.id}/edit`}>
                   <Button variant="ghost" size="icon" aria-label="تعديل">
                     <Edit className="size-4" />
                   </Button>
-                </Link>
-                <Button
+                </Link>}
+                {canManage && <Button
                   variant="ghost"
                   size="icon"
                   aria-label="إعادة تعيين كلمة المرور"
@@ -280,8 +285,8 @@ export default function TeamPage() {
                   }
                 >
                   <KeyRound className="size-4 text-amber-600" />
-                </Button>
-                <Button
+                </Button>}
+                {canManage && <Button
                   variant="ghost"
                   size="icon"
                   aria-label={m.isActive ? "تعليق" : "تفعيل"}
@@ -292,8 +297,8 @@ export default function TeamPage() {
                       m.isActive ? "text-emerald-600" : "text-slate-400"
                     }`}
                   />
-                </Button>
-                <Button
+                </Button>}
+                {canManage && <Button
                   variant="ghost"
                   size="icon"
                   aria-label="حذف"
@@ -303,7 +308,7 @@ export default function TeamPage() {
                   }}
                 >
                   <Trash2 className="size-4 text-red-500" />
-                </Button>
+                </Button>}
               </div>
             </Card>
           ))}
@@ -320,7 +325,7 @@ export default function TeamPage() {
         />
       )}
 
-      <ConfirmDialog
+      {canManage && <ConfirmDialog
         open={!!confirmId}
         onOpenChange={(o) => !o && setConfirmId(null)}
         title="حذف العضو"
@@ -328,9 +333,9 @@ export default function TeamPage() {
         confirmText="حذف"
         loading={deleteMutation.isPending}
         onConfirm={handleDelete}
-      />
+      />}
 
-      {resetTarget && (
+      {canManage && resetTarget && (
         <ResetPasswordDialog
           userId={resetTarget.id}
           userName={resetTarget.name}

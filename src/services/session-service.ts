@@ -290,17 +290,17 @@ export async function deleteSession(
   if (!existing) return null;
 
   await prisma.$transaction([
+    prisma.courtSession.update({ where: { id }, data: { status: "CANCELLED" } }),
     prisma.activity.create({
       data: {
         tenantId,
         userId,
-        action: "deleted",
+        action: "cancelled",
         entity: "session",
         entityId: id,
         caseId: existing.caseId,
       },
     }),
-    prisma.courtSession.delete({ where: { id } }),
   ]);
   return existing;
 }

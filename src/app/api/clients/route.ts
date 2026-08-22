@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiSuccess, handleApiError } from "@/lib/api-response";
-import { getTenantId, getCurrentUser } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   createClientSchema,
   clientFiltersSchema,
@@ -11,6 +12,7 @@ import { prisma } from "@/lib/prisma";
 // النمط البسيط (للاستخدام في dropdown القضايا) يبقى متاحاً عبر ?simple=1
 export async function GET(req: NextRequest) {
   try {
+    await requirePermission("CLIENT_READ");
     const tenantId = await getTenantId();
     const params = req.nextUrl.searchParams;
 
@@ -55,7 +57,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("CLIENT_CREATE");
     const body = await req.json();
     const data = createClientSchema.parse(body);
     const created = await createClient(tenantId, user.id, data);

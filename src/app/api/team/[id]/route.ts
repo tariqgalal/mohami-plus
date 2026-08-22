@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   updateTeamMemberSchema,
   resetPasswordSchema,
@@ -18,6 +19,7 @@ interface RouteCtx {
 
 export async function GET(_req: NextRequest, ctx: RouteCtx) {
   try {
+    await requirePermission("TEAM_READ");
     const tenantId = await getTenantId();
     const { id } = await ctx.params;
     const item = await getTeamMember(tenantId, id);
@@ -31,10 +33,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 export async function PUT(req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
-    if (user.role !== "FIRM_ADMIN") {
-      return apiError("صلاحيات مدير المكتب مطلوبة", 403);
-    }
+    const user = await requirePermission("TEAM_MANAGE");
     const { id } = await ctx.params;
     const body = await req.json();
 
@@ -58,10 +57,7 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
 export async function DELETE(_req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
-    if (user.role !== "FIRM_ADMIN") {
-      return apiError("صلاحيات مدير المكتب مطلوبة", 403);
-    }
+    const user = await requirePermission("TEAM_MANAGE");
     const { id } = await ctx.params;
     const deleted = await deleteTeamMember(tenantId, user.id, id);
     if (!deleted) return apiError("العضو غير موجود", 404);

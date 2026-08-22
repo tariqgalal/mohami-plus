@@ -1,11 +1,13 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { updateTenantSchema } from "@/lib/validations/settings";
 
 export async function GET() {
   try {
+    await requirePermission("TENANT_MANAGE");
     const tenantId = await getTenantId();
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
@@ -42,10 +44,7 @@ export async function GET() {
 export async function PUT(req: NextRequest) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
-    if (user.role !== "FIRM_ADMIN") {
-      return apiError("صلاحيات مدير المكتب مطلوبة", 403);
-    }
+    await requirePermission("TENANT_MANAGE");
     const body = await req.json();
     const data = updateTenantSchema.parse(body);
     const updated = await prisma.tenant.update({

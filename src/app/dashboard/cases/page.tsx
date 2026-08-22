@@ -229,8 +229,8 @@ export default function CasesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            aria-label="حذف"
-                            onClick={() => setConfirmId(c.id)}
+                            aria-label="الحذف غير متاح"
+                            disabled
                           >
                             <Trash2 className="size-4 text-red-500" />
                           </Button>
@@ -259,9 +259,9 @@ export default function CasesPage() {
       <ConfirmDialog
         open={!!confirmId}
         onOpenChange={(o) => !o && setConfirmId(null)}
-        title="حذف القضية"
-        description="هل أنت متأكد من حذف هذه القضية؟ سيتم حذف جميع البيانات المرتبطة بها (الجلسات، المستندات، الفواتير). لا يمكن التراجع عن هذا الإجراء."
-        confirmText="حذف"
+        title="الحذف غير متاح"
+        description="الحذف النهائي للقضايا معطّل حفاظاً على السجل القانوني."
+        confirmText="مغلق"
         loading={deleteMutation.isPending}
         onConfirm={handleDelete}
       />

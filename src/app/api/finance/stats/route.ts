@@ -1,5 +1,6 @@
 import { apiSuccess, handleApiError } from "@/lib/api-response";
 import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { getFinanceStats } from "@/services/invoice-service";
 import { scanAndNotifyOverdueInvoices } from "@/services/notification-service";
 
@@ -12,6 +13,7 @@ async function maybeScanOverdue(tenantId: string) {
   if (Date.now() - last < SCAN_INTERVAL_MS) return;
   lastScanByTenant.set(tenantId, Date.now());
   try {
+    await requirePermission("FINANCE_READ");
     await scanAndNotifyOverdueInvoices({ tenantId });
   } catch (e) {
     console.error("[overdue-scan]", e);

@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
 import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import {
   buildPublicInvoiceUrl,
@@ -19,6 +20,7 @@ interface RouteCtx {
 
 export async function POST(req: NextRequest, ctx: RouteCtx) {
   try {
+    await requirePermission("INVOICE_MANAGE");
     const tenantId = await getTenantId();
     const { id } = await ctx.params;
     const body = bodySchema.parse(await req.json());

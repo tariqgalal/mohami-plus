@@ -319,28 +319,9 @@ export async function updateCase(
 }
 
 export async function deleteCase(
-  tenantId: string,
-  userId: string,
-  id: string,
+  _tenantId: string,
+  _userId: string,
+  _id: string,
 ) {
-  const existing = await prisma.case.findFirst({
-    where: { id, tenantId },
-    select: { id: true },
-  });
-  if (!existing) return null;
-
-  await prisma.$transaction([
-    prisma.activity.create({
-      data: {
-        tenantId,
-        userId,
-        action: "deleted",
-        entity: "case",
-        entityId: id,
-      },
-    }),
-    prisma.case.delete({ where: { id } }),
-  ]);
-
-  return existing;
+  throw new Error("الحذف النهائي للقضايا غير مدعوم");
 }

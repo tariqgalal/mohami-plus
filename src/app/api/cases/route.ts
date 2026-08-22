@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiSuccess, handleApiError } from "@/lib/api-response";
-import { getTenantId, getCurrentUser } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   createCaseSchema,
   caseFiltersSchema,
@@ -9,6 +10,7 @@ import { createCase, listCases } from "@/services/case-service";
 
 export async function GET(req: NextRequest) {
   try {
+    await requirePermission("CASE_READ");
     const tenantId = await getTenantId();
     const params = Object.fromEntries(req.nextUrl.searchParams);
     const filters = caseFiltersSchema.parse(params);
@@ -22,7 +24,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("CASE_CREATE");
     const body = await req.json();
     const data = createCaseSchema.parse(body);
     const created = await createCase(tenantId, user.id, data);

@@ -3,12 +3,17 @@ import { getTenantId } from "@/lib/tenant";
 import { getTeamMember } from "@/services/team-service";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { TeamForm } from "@/components/team/team-form";
+import { getCurrentUser } from "@/lib/tenant";
+import { hasPermission } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 export default async function EditTeamMemberPage({ params }: PageProps) {
+  const user = await getCurrentUser();
+  if (!hasPermission(user.role, "TEAM_MANAGE")) redirect("/dashboard/team");
   const { id } = await params;
   const tenantId = await getTenantId();
   const m = await getTeamMember(tenantId, id);

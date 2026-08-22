@@ -47,10 +47,10 @@ export default function InvoicesPage() {
     if (!confirmId) return;
     try {
       await deleteMutation.mutateAsync(confirmId);
-      toast.success("تم حذف الفاتورة");
+      toast.success("تم إلغاء الفاتورة مع الاحتفاظ بسجلها");
       setConfirmId(null);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "فشل الحذف";
+      const msg = e instanceof Error ? e.message : "فشل الإلغاء";
       toast.error(msg);
     }
   }
@@ -273,7 +273,7 @@ export default function InvoicesPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          aria-label="حذف"
+                          aria-label="إلغاء الفاتورة"
                           onClick={() => setConfirmId(inv.id)}
                         >
                           <Trash2 className="size-4 text-red-500" />
@@ -302,9 +302,9 @@ export default function InvoicesPage() {
       <ConfirmDialog
         open={!!confirmId}
         onOpenChange={(o) => !o && setConfirmId(null)}
-        title="حذف الفاتورة"
-        description="هل أنت متأكد من حذف هذه الفاتورة؟ لا يمكن التراجع."
-        confirmText="حذف"
+        title="إلغاء الفاتورة"
+        description="سيُحتفظ بسجل الفاتورة وتُحوّل حالتها إلى ملغاة."
+        confirmText="إلغاء الفاتورة"
         loading={deleteMutation.isPending}
         onConfirm={handleDelete}
       />

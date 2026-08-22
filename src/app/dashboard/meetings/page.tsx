@@ -54,10 +54,10 @@ export default function MeetingsPage() {
     if (!confirmId) return;
     try {
       await deleteMutation.mutateAsync(confirmId);
-      toast.success("تم حذف الاجتماع");
+      toast.success("تم إلغاء الاجتماع مع الاحتفاظ بسجله");
       setConfirmId(null);
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "فشل الحذف";
+      const msg = e instanceof Error ? e.message : "فشل الإلغاء";
       toast.error(msg);
     }
   }
@@ -253,7 +253,7 @@ export default function MeetingsPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="حذف"
+                  aria-label="إلغاء"
                   onClick={() => setConfirmId(m.id)}
                 >
                   <Trash2 className="size-4 text-red-500" />
@@ -277,9 +277,9 @@ export default function MeetingsPage() {
       <ConfirmDialog
         open={!!confirmId}
         onOpenChange={(o) => !o && setConfirmId(null)}
-        title="حذف الاجتماع"
-        description="هل أنت متأكد من حذف هذا الاجتماع؟ لا يمكن التراجع."
-        confirmText="حذف"
+        title="إلغاء الاجتماع"
+        description="سيُحتفظ بسجل الاجتماع وتُغيّر حالته إلى ملغى."
+        confirmText="إلغاء الاجتماع"
         loading={deleteMutation.isPending}
         onConfirm={handleDelete}
       />

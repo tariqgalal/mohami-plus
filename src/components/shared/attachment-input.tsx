@@ -258,10 +258,9 @@ export function AttachmentInput({
               )}
               <button
                 type="button"
-                onClick={() => removeMut.mutate(a.id)}
-                disabled={removeMut.isPending}
+                disabled
                 className="text-slate-400 hover:text-red-600 p-1"
-                aria-label="حذف"
+                aria-label="الحذف غير متاح"
               >
                 <Trash2 className="size-4" />
               </button>

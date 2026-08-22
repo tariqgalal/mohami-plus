@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiSuccess, apiError, handleApiError } from "@/lib/api-response";
 import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   getFileUrl,
   isStorageConfigured,
@@ -9,6 +10,7 @@ import {
 
 export async function GET(req: NextRequest) {
   try {
+    await requirePermission("DOCUMENT_READ");
     const tenantId = await getTenantId();
     const filePath = req.nextUrl.searchParams.get("path");
     if (!filePath) return apiError("مسار الملف مطلوب", 400);

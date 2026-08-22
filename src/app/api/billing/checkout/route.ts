@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getTenantId, requireFirmAdmin } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   getOrCreateSubscription,
   createPendingInvoice,
@@ -21,7 +22,7 @@ const checkoutSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     // فقط مدير المكتب يقدر يبدأ الاشتراك / الترقية
-    await requireFirmAdmin();
+    await requirePermission("BILLING_MANAGE");
     const tenantId = await getTenantId();
 
     const body = await req.json();

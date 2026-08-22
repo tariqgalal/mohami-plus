@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import { updateInvoiceSchema } from "@/lib/validations/invoice";
 import {
   deleteInvoice,
@@ -14,6 +15,7 @@ interface RouteCtx {
 
 export async function GET(_req: NextRequest, ctx: RouteCtx) {
   try {
+    await requirePermission("INVOICE_READ");
     const tenantId = await getTenantId();
     const { id } = await ctx.params;
     const item = await getInvoice(tenantId, id);
@@ -27,7 +29,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 export async function PUT(req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("INVOICE_MANAGE");
     const { id } = await ctx.params;
     const body = await req.json();
     const data = updateInvoiceSchema.parse(body);
@@ -42,7 +44,7 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
 export async function DELETE(_req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("INVOICE_MANAGE");
     const { id } = await ctx.params;
     const deleted = await deleteInvoice(tenantId, user.id, id);
     if (!deleted) return apiError("الفاتورة غير موجودة", 404);

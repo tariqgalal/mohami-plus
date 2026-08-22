@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   createInvoiceSchema,
   invoiceFiltersSchema,
@@ -9,6 +10,7 @@ import { createInvoice, listInvoices } from "@/services/invoice-service";
 
 export async function GET(req: NextRequest) {
   try {
+    await requirePermission("INVOICE_READ");
     const tenantId = await getTenantId();
     const filters = invoiceFiltersSchema.parse(
       Object.fromEntries(req.nextUrl.searchParams),
@@ -23,7 +25,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("INVOICE_MANAGE");
     const body = await req.json();
     const data = createInvoiceSchema.parse(body);
     const created = await createInvoice(tenantId, user.id, data);

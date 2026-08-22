@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api-response";
-import { getCurrentUser, getTenantId } from "@/lib/tenant";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
 import {
   recordResultSchema,
   updateSessionSchema,
@@ -18,6 +19,7 @@ interface RouteCtx {
 
 export async function GET(_req: NextRequest, ctx: RouteCtx) {
   try {
+    await requirePermission("SESSION_READ");
     const tenantId = await getTenantId();
     const { id } = await ctx.params;
     const item = await getSession(tenantId, id);
@@ -31,9 +33,13 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
 export async function PUT(req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
-    const { id } = await ctx.params;
     const body = await req.json();
+    const user = await requirePermission(
+      body && typeof body === "object" && "result" in body && !("date" in body)
+        ? "SESSION_RECORD_RESULT"
+        : "SESSION_UPDATE",
+    );
+    const { id } = await ctx.params;
 
     // تسجيل نتيجة الجلسة
     if (body && typeof body === "object" && "result" in body && !("date" in body)) {
@@ -55,7 +61,7 @@ export async function PUT(req: NextRequest, ctx: RouteCtx) {
 export async function DELETE(_req: NextRequest, ctx: RouteCtx) {
   try {
     const tenantId = await getTenantId();
-    const user = await getCurrentUser();
+    const user = await requirePermission("SESSION_UPDATE");
     const { id } = await ctx.params;
     const deleted = await deleteSession(tenantId, user.id, id);
     if (!deleted) return apiError("الجلسة غير موجودة", 404);
