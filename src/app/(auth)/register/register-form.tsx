@@ -82,8 +82,10 @@ export function RegisterForm() {
       router.push("/login");
       return;
     }
-    router.push("/dashboard");
-    router.refresh();
+    // Hard navigation so the middleware re-reads the freshly-set session cookie
+    // and the dashboard loads authenticated. A soft router.push here races with
+    // the just-completed sign-in and can be swallowed.
+    window.location.href = "/dashboard";
   }
 
   return (
