@@ -43,23 +43,29 @@ export const emailSchema = z
     { message: "صيغة البريد الإلكتروني غير صحيحة" },
   );
 
-// Optional variants — accept empty string / null / undefined, output `string | null | undefined`
-// (keeps compatibility with existing form fields that allow undefined defaults).
+// Optional variants — accept empty string / null / undefined / missing key,
+// output `string | null | undefined`.
+//
+// NOTE: the trailing `.optional()` is essential. A union that merely *contains*
+// `z.undefined()` still marks the object property as required, so when the key is
+// entirely absent from the submitted object (e.g. a form field that isn't
+// rendered), zod v4's Standard Schema path — used by @hookform/resolvers v5 —
+// rejects it with "expected nonoptional". `.optional()` makes a missing key valid.
 export const optionalSaudiMobileSchema = z
-  .union([z.literal(""), z.null(), z.undefined(), saudiMobileSchema])
-  .transform((v): string | null | undefined => {
+  .union([z.literal(""), z.null(), saudiMobileSchema])
+  .transform((v): string | null => {
     if (v === "" || v === null) return null;
-    if (v === undefined) return undefined;
     return v;
-  });
+  })
+  .optional();
 
 export const optionalEmailSchema = z
-  .union([z.literal(""), z.null(), z.undefined(), emailSchema])
-  .transform((v): string | null | undefined => {
+  .union([z.literal(""), z.null(), emailSchema])
+  .transform((v): string | null => {
     if (v === "" || v === null) return null;
-    if (v === undefined) return undefined;
     return v;
-  });
+  })
+  .optional();
 
 export function isValidSaudiMobile(raw: string | null | undefined): boolean {
   if (!raw) return false;
