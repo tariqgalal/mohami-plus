@@ -158,6 +158,38 @@ export const POA_STATUS = {
   FULLY_REVOKED: "مفسوخة كلياً",
 } as const;
 
+// طلبات خدمات العملاء (CRM)
+export const REQUEST_SOURCE = {
+  CLIENT: "العميل",
+  LAWYER: "من طرف محامي",
+  PHONE: "اتصال",
+  WHATSAPP: "الواتساب",
+} as const;
+
+export const SERVICE_REQUEST_STATUS = {
+  NEW: "جديد",
+  UNDER_REVIEW: "قيد الدراسة",
+  IN_STUDY: "تحت الدراسة",
+  INITIAL_APPROVAL: "قبول مبدئي",
+  FINAL_APPROVAL: "قبول نهائي",
+  REJECTED: "مرفوض",
+} as const;
+
+// أنواع الطلبات وأنواعها الفرعية (تُخزّن كنص عربي مباشرة)
+export const SERVICE_REQUEST_TYPES = [
+  "استشارة",
+  "قضايا",
+  "عقود",
+  "أخرى",
+] as const;
+
+export const SERVICE_REQUEST_SUBTYPES: Record<string, readonly string[]> = {
+  استشارة: ["لقاء حضوري", "استشارة كتابية", "استشارة شفوية", "لقاء عن بعد"],
+  قضايا: ["دراسة قضية"],
+  عقود: [],
+  أخرى: [],
+};
+
 export const TENANT_STATUS = {
   TRIAL: "فترة تجريبية",
   ACTIVE: "نشط",

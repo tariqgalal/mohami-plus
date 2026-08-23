@@ -53,6 +53,7 @@ model Tenant {
   platformInvoices PlatformInvoice[]
 
   powersOfAttorney PowerOfAttorney[]
+  serviceRequests  ClientServiceRequest[]
 }
 
 enum Plan {
@@ -767,4 +768,47 @@ enum POAStatus {
   EXPIRED // منتهية
   PARTIALLY_REVOKED // مفسوخة جزئياً
   FULLY_REVOKED // مفسوخة كلياً
+}
+
+// ============ CLIENT SERVICE REQUESTS (طلبات خدمات العملاء / CRM) ============
+
+model ClientServiceRequest {
+  id             String               @id @default(cuid())
+  source         RequestSource // مصدر الطلب
+  requestType    String // نوع الطلب: استشارة، قضايا، عقود، أخرى
+  requestSubType String? // نوع فرعي
+  description    String               @db.Text // وصف الطلب
+  applicantName  String // اسم مقدم الطلب
+  applicantPhone String?
+  applicantEmail String?
+  status         ServiceRequestStatus @default(NEW)
+  assignedTo     String? // معرّف المستخدم المكلف
+  dateHijri      String? // تاريخ الطلب هجري
+  date           DateTime             @default(now()) // تاريخ الطلب ميلادي
+  notes          String?              @db.Text
+  timeSpent      Int?                 @default(0) // عداد الوقت بالثواني
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+enum RequestSource {
+  CLIENT // العميل
+  LAWYER // من طرف محامي
+  PHONE // اتصال
+  WHATSAPP // الواتساب
+}
+
+enum ServiceRequestStatus {
+  NEW // جديد
+  UNDER_REVIEW // قيد الدراسة
+  IN_STUDY // تحت الدراسة
+  INITIAL_APPROVAL // قبول مبدئي
+  FINAL_APPROVAL // قبول نهائي
+  REJECTED // مرفوض
 }

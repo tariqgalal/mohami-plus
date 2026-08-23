@@ -14,7 +14,8 @@ export type Permission =
   | "MEETING_READ" | "MEETING_CREATE" | "MEETING_UPDATE" | "MEETING_RECORD_MINUTES"
   | "INVOICE_READ" | "INVOICE_MANAGE" | "FINANCE_READ"
   | "TEAM_READ" | "TEAM_MANAGE" | "TENANT_MANAGE" | "BILLING_MANAGE" | "REPORTS_READ"
-  | "POA_READ" | "POA_CREATE" | "POA_UPDATE" | "POA_DELETE";
+  | "POA_READ" | "POA_CREATE" | "POA_UPDATE" | "POA_DELETE"
+  | "SERVICE_REQUEST_READ" | "SERVICE_REQUEST_CREATE" | "SERVICE_REQUEST_UPDATE" | "SERVICE_REQUEST_DELETE";
 
 const legalManagers: AppRole[] = ["FIRM_ADMIN", "SENIOR_LAWYER", "LAWYER"];
 const legalReaders: AppRole[] = [...legalManagers, "TRAINEE", "SECRETARY", "ACCOUNTANT"];
@@ -37,6 +38,8 @@ const permissions: Record<Permission, readonly AppRole[]> = {
   REPORTS_READ: ["FIRM_ADMIN", "ACCOUNTANT"],
   POA_READ: legalReaders, POA_CREATE: officeOperators, POA_UPDATE: officeOperators,
   POA_DELETE: legalManagers,
+  SERVICE_REQUEST_READ: legalReaders, SERVICE_REQUEST_CREATE: officeOperators,
+  SERVICE_REQUEST_UPDATE: officeOperators, SERVICE_REQUEST_DELETE: legalManagers,
 };
 
 export class PermissionDeniedError extends Error {

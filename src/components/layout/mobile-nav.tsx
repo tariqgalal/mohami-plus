@@ -21,6 +21,7 @@ import {
   Settings,
   Landmark,
   ShieldCheck,
+  Headphones,
 } from "lucide-react";
 
 const NAV = [
@@ -28,6 +29,7 @@ const NAV = [
   { href: "/dashboard/cases", label: "القضايا", icon: Briefcase },
   { href: "/dashboard/sessions", label: "الجلسات", icon: Gavel },
   { href: "/dashboard/clients", label: "العملاء", icon: Users },
+  { href: "/dashboard/client-requests", label: "طلبات خدمات العملاء", icon: Headphones },
   { href: "/dashboard/powers-of-attorney", label: "الوكالات", icon: ShieldCheck },
   { href: "/dashboard/team", label: "الفريق", icon: UserCog },
   { href: "/dashboard/meetings", label: "الاجتماعات", icon: CalendarDays },
