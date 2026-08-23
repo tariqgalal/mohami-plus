@@ -51,6 +51,8 @@ model Tenant {
 
   subscription     Subscription?
   platformInvoices PlatformInvoice[]
+
+  powersOfAttorney PowerOfAttorney[]
 }
 
 enum Plan {
@@ -279,8 +281,9 @@ model Client {
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id])
 
-  cases    Case[]
-  invoices Invoice[]
+  cases            Case[]
+  invoices         Invoice[]
+  powersOfAttorney PowerOfAttorney[]
 
   @@index([tenantId])
   @@index([phone])
@@ -730,4 +733,38 @@ model WebhookEvent {
 model PlatformInvoiceCounter {
   year    Int @id // السنة الميلادية (مثلاً 2026)
   current Int @default(0) // آخر رقم استُخدم
+}
+
+// ============ POWERS OF ATTORNEY (الوكالات) ============
+
+model PowerOfAttorney {
+  id             String    @id @default(cuid())
+  number         String // رقم الوكالة (مثل 472771403)
+  startDateHijri String // تاريخ البداية هجري (1447-05-08)
+  startDate      DateTime // تاريخ البداية ميلادي
+  endDateHijri   String // تاريخ الانتهاء هجري
+  endDate        DateTime // تاريخ الانتهاء ميلادي
+  status         POAStatus @default(ACTIVE)
+  notes          String?   @db.Text
+  attachments    Json? // مرفقات الوكالة
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, endDate])
+  @@index([clientId])
+}
+
+enum POAStatus {
+  ACTIVE // سارية
+  EXPIRED // منتهية
+  PARTIALLY_REVOKED // مفسوخة جزئياً
+  FULLY_REVOKED // مفسوخة كلياً
 }

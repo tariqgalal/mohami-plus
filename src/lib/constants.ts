@@ -151,6 +151,13 @@ export const DOC_CATEGORIES = {
   OTHER: "أخرى",
 } as const;
 
+export const POA_STATUS = {
+  ACTIVE: "سارية",
+  EXPIRED: "منتهية",
+  PARTIALLY_REVOKED: "مفسوخة جزئياً",
+  FULLY_REVOKED: "مفسوخة كلياً",
+} as const;
+
 export const TENANT_STATUS = {
   TRIAL: "فترة تجريبية",
   ACTIVE: "نشط",

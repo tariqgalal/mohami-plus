@@ -17,6 +17,7 @@ import {
   LogOut,
   Landmark,
   CreditCard,
+  ShieldCheck,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { APP_NAME, USER_ROLES } from "@/lib/constants";
@@ -28,6 +29,7 @@ const NAV: Array<{ href: string; label: string; icon: typeof LayoutDashboard; pe
   { href: "/dashboard/cases", label: "القضايا", icon: Briefcase },
   { href: "/dashboard/sessions", label: "الجلسات", icon: Gavel },
   { href: "/dashboard/clients", label: "العملاء", icon: Users },
+  { href: "/dashboard/powers-of-attorney", label: "الوكالات", icon: ShieldCheck, permission: "POA_READ" },
   { href: "/dashboard/team", label: "الفريق", icon: UserCog, permission: "TEAM_READ" },
   { href: "/dashboard/meetings", label: "الاجتماعات", icon: CalendarDays },
   { href: "/dashboard/finance", label: "المالية", icon: Wallet, permission: "FINANCE_READ" },
