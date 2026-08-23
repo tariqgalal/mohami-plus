@@ -54,6 +54,7 @@ model Tenant {
 
   powersOfAttorney PowerOfAttorney[]
   serviceRequests  ClientServiceRequest[]
+  correspondences  Correspondence[]
 }
 
 enum Plan {
@@ -811,4 +812,55 @@ enum ServiceRequestStatus {
   INITIAL_APPROVAL // قبول مبدئي
   FINAL_APPROVAL // قبول نهائي
   REJECTED // مرفوض
+}
+
+// ============ CORRESPONDENCE (المراسلات الداخلية) ============
+
+model Correspondence {
+  id              String                  @id @default(cuid())
+  serialNumber    Int // رقم المسلسل التلقائي لكل مكتب
+  subject         String // الموضوع
+  body            String                  @db.Text // المحتوى
+  category        CorrespondenceCategory // القسم
+  type            CorrespondenceType // مراسلات عملاء / موظفين
+  direction       CorrespondenceDirection // واردة / صادرة
+  senderId        String // معرّف المرسل
+  senderName      String // اسم المرسل (لقطة وقت الإرسال)
+  recipientIds    Json // معرّفات المستلمين
+  recipientNames  Json // أسماء المستلمين (لقطة)
+  viewedBy        Json? // من شاهد المراسلة [{ id, name, at }]
+  attachmentCount Int                     @default(0)
+  attachments     Json? // مرفقات المراسلة
+  dateHijri       String? // تاريخ الإرسال هجري
+  date            DateTime                @default(now()) // تاريخ الإرسال ميلادي
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  parentId String? // للردود (thread)
+  parent   Correspondence?  @relation("CorrespondenceThread", fields: [parentId], references: [id])
+  replies  Correspondence[] @relation("CorrespondenceThread")
+
+  @@unique([tenantId, serialNumber])
+  @@index([tenantId])
+  @@index([tenantId, type, direction])
+  @@index([parentId])
+}
+
+enum CorrespondenceCategory {
+  DISCUSSIONS // مناقشات واستفسارات
+  TASKS // المهام
+  CASES_PROJECTS // القضايا والمشاريع
+}
+
+enum CorrespondenceType {
+  CLIENT // مراسلات العملاء
+  EMPLOYEE // مراسلات الموظفين
+}
+
+enum CorrespondenceDirection {
+  INCOMING // الواردة
+  OUTGOING // المرسلة
 }

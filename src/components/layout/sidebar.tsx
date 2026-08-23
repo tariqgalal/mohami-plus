@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -19,18 +20,43 @@ import {
   CreditCard,
   ShieldCheck,
   Headphones,
+  Mail,
+  ChevronDown,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { APP_NAME, USER_ROLES } from "@/lib/constants";
 import { hasPermission, type Permission } from "@/lib/permissions";
 import type { UserRole } from "@prisma/client";
 
-const NAV: Array<{ href: string; label: string; icon: typeof LayoutDashboard; permission?: Permission }> = [
+interface NavChild {
+  href: string;
+  label: string;
+}
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  permission?: Permission;
+  children?: NavChild[];
+}
+
+const NAV: NavItem[] = [
   { href: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
   { href: "/dashboard/cases", label: "القضايا", icon: Briefcase },
   { href: "/dashboard/sessions", label: "الجلسات", icon: Gavel },
   { href: "/dashboard/clients", label: "العملاء", icon: Users },
   { href: "/dashboard/client-requests", label: "طلبات خدمات العملاء", icon: Headphones, permission: "SERVICE_REQUEST_READ" },
+  {
+    href: "/dashboard/correspondence",
+    label: "المراسلات",
+    icon: Mail,
+    permission: "CORRESPONDENCE_READ",
+    children: [
+      { href: "/dashboard/correspondence/clients", label: "مراسلات العملاء" },
+      { href: "/dashboard/correspondence/employees", label: "مراسلات الموظفين" },
+    ],
+  },
   { href: "/dashboard/powers-of-attorney", label: "الوكالات", icon: ShieldCheck, permission: "POA_READ" },
   { href: "/dashboard/team", label: "الفريق", icon: UserCog, permission: "TEAM_READ" },
   { href: "/dashboard/meetings", label: "الاجتماعات", icon: CalendarDays },
@@ -58,6 +84,11 @@ export function Sidebar() {
 
       <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
         {NAV.filter((item) => !item.permission || (user && hasPermission(user.role as UserRole, item.permission))).map((item) => {
+          if (item.children) {
+            return (
+              <NavGroup key={item.href} item={item} pathname={pathname} />
+            );
+          }
           const Icon = item.icon;
           const active =
             item.href === "/dashboard"
@@ -117,5 +148,56 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+  );
+}
+
+function NavGroup({ item, pathname }: { item: NavItem; pathname: string }) {
+  const groupActive = pathname.startsWith(item.href);
+  const [open, setOpen] = useState(groupActive);
+  const Icon = item.icon;
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all duration-200",
+          groupActive
+            ? "text-white"
+            : "text-slate-300 hover:bg-slate-800/70 hover:text-white",
+        )}
+      >
+        <Icon className="size-5 shrink-0 transition-transform group-hover:scale-110" />
+        <span className="flex-1 text-right">{item.label}</span>
+        <ChevronDown
+          className={cn(
+            "size-4 shrink-0 transition-transform",
+            open ? "rotate-180" : "",
+          )}
+        />
+      </button>
+      {open && (
+        <div className="mt-1 space-y-1 pe-3 ps-9">
+          {item.children!.map((child) => {
+            const active = pathname === child.href;
+            return (
+              <Link
+                key={child.href}
+                href={child.href}
+                className={cn(
+                  "block rounded-lg px-3 py-2 text-sm transition-colors",
+                  active
+                    ? "bg-brand-gradient text-white shadow-md shadow-brand-600/30"
+                    : "text-slate-400 hover:bg-slate-800/70 hover:text-white",
+                )}
+              >
+                {child.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

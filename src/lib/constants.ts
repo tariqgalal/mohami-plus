@@ -190,6 +190,23 @@ export const SERVICE_REQUEST_SUBTYPES: Record<string, readonly string[]> = {
   أخرى: [],
 };
 
+// المراسلات الداخلية
+export const CORRESPONDENCE_CATEGORY = {
+  DISCUSSIONS: "مناقشات واستفسارات",
+  TASKS: "المهام",
+  CASES_PROJECTS: "القضايا والمشاريع",
+} as const;
+
+export const CORRESPONDENCE_TYPE = {
+  CLIENT: "مراسلات العملاء",
+  EMPLOYEE: "مراسلات الموظفين",
+} as const;
+
+export const CORRESPONDENCE_DIRECTION = {
+  INCOMING: "الواردة",
+  OUTGOING: "المرسلة",
+} as const;
+
 export const TENANT_STATUS = {
   TRIAL: "فترة تجريبية",
   ACTIVE: "نشط",
