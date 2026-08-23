@@ -58,6 +58,7 @@ model Tenant {
   transactions     Transaction[]
   employeeLeaves   EmployeeLeave[]
   opponentRecords  OpponentRecord[]
+  documentBorrowings DocumentBorrowing[]
 }
 
 enum Plan {
@@ -969,4 +970,36 @@ model OpponentRecord {
 enum OpponentStatus {
   ACTIVE // نشط
   ARCHIVED // مؤرشف
+}
+
+// ============ DOCUMENT BORROWINGS (الاستعارات) ============
+
+model DocumentBorrowing {
+  id             String          @id @default(cuid())
+  employeeId     String // معرّف الموظف المستعير (User)
+  employeeName   String // اسم الموظف (لقطة وقت الإنشاء)
+  documentSource String // مصدر الوثيقة (القضية / العميل / الأرشيف ...)
+  documentType   String // نوع الوثيقة
+  documentName   String // اسم/رقم الوثيقة
+  description    String?         @db.Text // الوصف
+  borrowDate     DateTime // تاريخ الاستعارة (ميلادي)
+  borrowDateHijri String? // تاريخ الاستعارة (هجري)
+  returnDate     DateTime? // تاريخ الإرجاع (ميلادي)
+  returnDateHijri String? // تاريخ الإرجاع (هجري)
+  status         BorrowingStatus @default(PENDING)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, employeeId])
+}
+
+enum BorrowingStatus {
+  PENDING // قيد الطلب
+  DELIVERED // تم التسليم
+  RETURNED // تم الإرجاع
+  REJECTED // مرفوض
 }

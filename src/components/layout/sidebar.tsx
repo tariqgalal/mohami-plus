@@ -24,6 +24,7 @@ import {
   Inbox,
   Users2,
   Globe,
+  BookOpen,
   ChevronDown,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
@@ -79,6 +80,7 @@ const NAV: NavItem[] = [
     ],
   },
   { href: "/dashboard/powers-of-attorney", label: "الوكالات", icon: ShieldCheck, permission: "POA_READ" },
+  { href: "/dashboard/borrowings", label: "الاستعارات", icon: BookOpen, permission: "BORROWING_READ" },
   { href: "/dashboard/team", label: "الفريق", icon: UserCog, permission: "TEAM_READ" },
   {
     href: "/dashboard/hr",

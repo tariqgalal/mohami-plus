@@ -224,6 +224,14 @@ export const OPPONENT_STATUS = {
   ARCHIVED: "مؤرشف",
 } as const;
 
+// الاستعارات — حالة الاستعارة
+export const BORROWING_STATUS = {
+  PENDING: "قيد الطلب",
+  DELIVERED: "تم التسليم",
+  RETURNED: "تم الإرجاع",
+  REJECTED: "مرفوض",
+} as const;
+
 // الموارد البشرية — أنواع الإجازات
 export const LEAVE_TYPE = {
   ANNUAL: "سنوية",
