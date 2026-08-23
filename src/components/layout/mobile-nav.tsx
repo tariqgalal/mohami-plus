@@ -23,6 +23,9 @@ import {
   ShieldCheck,
   Headphones,
   Mail,
+  Inbox,
+  Users2,
+  Globe,
 } from "lucide-react";
 
 const NAV = [
@@ -33,13 +36,18 @@ const NAV = [
   { href: "/dashboard/client-requests", label: "طلبات خدمات العملاء", icon: Headphones },
   { href: "/dashboard/correspondence/clients", label: "مراسلات العملاء", icon: Mail },
   { href: "/dashboard/correspondence/employees", label: "مراسلات الموظفين", icon: Mail },
+  { href: "/dashboard/transactions/incoming", label: "المعاملات — الوارد", icon: Inbox },
+  { href: "/dashboard/transactions/outgoing", label: "المعاملات — الصادر", icon: Inbox },
   { href: "/dashboard/powers-of-attorney", label: "الوكالات", icon: ShieldCheck },
   { href: "/dashboard/team", label: "الفريق", icon: UserCog },
+  { href: "/dashboard/hr/leaves", label: "سجل الإجازات", icon: Users2 },
+  { href: "/dashboard/hr/leave-reports", label: "تقارير إجازات الموظفين", icon: Users2 },
   { href: "/dashboard/meetings", label: "الاجتماعات", icon: CalendarDays },
   { href: "/dashboard/finance", label: "المالية", icon: Wallet },
   { href: "/dashboard/documents", label: "المستندات", icon: FileText },
   { href: "/dashboard/reports", label: "التقارير", icon: BarChart3 },
   { href: "/dashboard/najiz", label: "ناجز", icon: Landmark },
+  { href: "/dashboard/wathiq", label: "واجهة وثائق", icon: Globe },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];
 

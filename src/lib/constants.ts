@@ -207,6 +207,32 @@ export const CORRESPONDENCE_DIRECTION = {
   OUTGOING: "المرسلة",
 } as const;
 
+// المعاملات الرسمية (وارد/صادر)
+export const TRANSACTION_DIRECTION = {
+  INCOMING: "وارد",
+  OUTGOING: "صادر",
+} as const;
+
+export const TRANSACTION_STATUS = {
+  ACTIVE: "نشطة",
+  ARCHIVED: "مؤرشفة",
+} as const;
+
+// الموارد البشرية — أنواع الإجازات
+export const LEAVE_TYPE = {
+  ANNUAL: "سنوية",
+  SICK: "مرضية",
+  EMERGENCY: "اضطرارية",
+  UNPAID: "بدون راتب",
+  OTHER: "أخرى",
+} as const;
+
+export const LEAVE_STATUS = {
+  PENDING: "قيد الانتظار",
+  APPROVED: "موافق عليها",
+  REJECTED: "مرفوضة",
+} as const;
+
 export const TENANT_STATUS = {
   TRIAL: "فترة تجريبية",
   ACTIVE: "نشط",

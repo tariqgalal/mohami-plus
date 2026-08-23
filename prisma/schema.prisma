@@ -55,6 +55,8 @@ model Tenant {
   powersOfAttorney PowerOfAttorney[]
   serviceRequests  ClientServiceRequest[]
   correspondences  Correspondence[]
+  transactions     Transaction[]
+  employeeLeaves   EmployeeLeave[]
 }
 
 enum Plan {
@@ -863,4 +865,79 @@ enum CorrespondenceType {
 enum CorrespondenceDirection {
   INCOMING // الواردة
   OUTGOING // المرسلة
+}
+
+// ============ TRANSACTIONS (المعاملات الرسمية — وارد/صادر) ============
+
+model Transaction {
+  id               String                @id @default(cuid())
+  registryNumber   String // رقم القيد
+  subject          String // موضوع المعاملة
+  direction        TransactionDirection // وارد / صادر
+  receiveDate      DateTime? // تاريخ الاستلام (للوارد)
+  receiveDateHijri String?
+  sendDate         DateTime? // تاريخ الإرسال (للصادر)
+  sendDateHijri    String?
+  senderName       String? // المرسل
+  recipientName    String? // المستلم
+  department       String? // القسم
+  notes            String?               @db.Text
+  attachments      Json? // مرفقات المعاملة
+  status           TransactionStatus     @default(ACTIVE)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, direction])
+}
+
+enum TransactionDirection {
+  INCOMING // وارد
+  OUTGOING // صادر
+}
+
+enum TransactionStatus {
+  ACTIVE // نشطة
+  ARCHIVED // مؤرشفة
+}
+
+// ============ HR — EMPLOYEE LEAVES (إجازات الموظفين) ============
+
+model EmployeeLeave {
+  id             String      @id @default(cuid())
+  employeeId     String // معرّف الموظف (User)
+  employeeName   String // اسم الموظف (لقطة وقت الإنشاء)
+  leaveType      LeaveType // نوع الإجازة
+  startDate      DateTime // من (ميلادي)
+  startDateHijri String // من (هجري)
+  endDate        DateTime // إلى (ميلادي)
+  endDateHijri   String // إلى (هجري)
+  daysCount      Int // عدد الأيام (محسوب)
+  status         LeaveStatus @default(PENDING)
+  notes          String?     @db.Text
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, employeeId])
+}
+
+enum LeaveType {
+  ANNUAL // سنوية
+  SICK // مرضية
+  EMERGENCY // اضطرارية
+  UNPAID // بدون راتب
+  OTHER // أخرى
+}
+
+enum LeaveStatus {
+  PENDING // قيد الانتظار
+  APPROVED // موافق عليها
+  REJECTED // مرفوضة
 }

@@ -21,6 +21,9 @@ import {
   ShieldCheck,
   Headphones,
   Mail,
+  Inbox,
+  Users2,
+  Globe,
   ChevronDown,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
@@ -57,13 +60,45 @@ const NAV: NavItem[] = [
       { href: "/dashboard/correspondence/employees", label: "مراسلات الموظفين" },
     ],
   },
+  {
+    href: "/dashboard/transactions",
+    label: "المعاملات",
+    icon: Inbox,
+    permission: "TRANSACTION_READ",
+    children: [
+      { href: "/dashboard/transactions/incoming", label: "الوارد" },
+      { href: "/dashboard/transactions/outgoing", label: "الصادر" },
+    ],
+  },
   { href: "/dashboard/powers-of-attorney", label: "الوكالات", icon: ShieldCheck, permission: "POA_READ" },
   { href: "/dashboard/team", label: "الفريق", icon: UserCog, permission: "TEAM_READ" },
+  {
+    href: "/dashboard/hr",
+    label: "الموارد البشرية",
+    icon: Users2,
+    permission: "HR_READ",
+    children: [
+      { href: "/dashboard/hr/leaves", label: "سجل الإجازات" },
+      { href: "/dashboard/hr/leave-reports", label: "تقارير إجازات الموظفين" },
+    ],
+  },
   { href: "/dashboard/meetings", label: "الاجتماعات", icon: CalendarDays },
   { href: "/dashboard/finance", label: "المالية", icon: Wallet, permission: "FINANCE_READ" },
   { href: "/dashboard/documents", label: "المستندات", icon: FileText },
   { href: "/dashboard/reports", label: "التقارير", icon: BarChart3, permission: "REPORTS_READ" },
   { href: "/dashboard/najiz", label: "ناجز", icon: Landmark },
+  {
+    href: "/dashboard/wathiq",
+    label: "واجهة وثائق",
+    icon: Globe,
+    children: [
+      { href: "/dashboard/wathiq/commercial-registry", label: "السجل التجاري" },
+      { href: "/dashboard/wathiq/company-contracts", label: "عقود الشركات" },
+      { href: "/dashboard/wathiq/verify-poa", label: "التحقق من الوكالة" },
+      { href: "/dashboard/wathiq/national-address", label: "العنوان الوطني" },
+      { href: "/dashboard/wathiq/employee-info", label: "معلومات الموظف" },
+    ],
+  },
   { href: "/dashboard/billing", label: "الاشتراك والفوترة", icon: CreditCard, permission: "BILLING_MANAGE" },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];

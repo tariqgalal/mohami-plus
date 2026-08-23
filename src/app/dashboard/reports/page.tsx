@@ -20,6 +20,7 @@ import type { UserRole } from "@prisma/client";
 import { CasesPieChart } from "@/components/charts/cases-pie-chart";
 import { CasesBarChart } from "@/components/charts/cases-bar-chart";
 import { MonthlyLineChart } from "@/components/charts/monthly-line-chart";
+import { ReportsHub } from "@/components/reports/reports-hub";
 
 export default async function ReportsPage() {
   const user = await getCurrentUser();
@@ -188,6 +189,8 @@ export default async function ReportsPage() {
           )}
         </CardContent>
       </Card>
+
+      <ReportsHub />
     </div>
   );
 }
