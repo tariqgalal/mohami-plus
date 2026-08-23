@@ -1,0 +1,38 @@
+import { NextRequest } from "next/server";
+import { apiSuccess, handleApiError } from "@/lib/api-response";
+import { getTenantId } from "@/lib/tenant";
+import { requirePermission } from "@/lib/permissions";
+import {
+  createOpponentSchema,
+  opponentFiltersSchema,
+} from "@/lib/validations/opponent-record";
+import {
+  createOpponent,
+  listOpponents,
+} from "@/services/opponent-record-service";
+
+export async function GET(req: NextRequest) {
+  try {
+    await requirePermission("OPPONENT_READ");
+    const tenantId = await getTenantId();
+    const params = Object.fromEntries(req.nextUrl.searchParams);
+    const filters = opponentFiltersSchema.parse(params);
+    const result = await listOpponents(tenantId, filters);
+    return apiSuccess(result);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const tenantId = await getTenantId();
+    const user = await requirePermission("OPPONENT_CREATE");
+    const body = await req.json();
+    const data = createOpponentSchema.parse(body);
+    const created = await createOpponent(tenantId, user.id, data);
+    return apiSuccess(created, 201);
+  } catch (error) {
+    return handleApiError(error);
+  }
+}

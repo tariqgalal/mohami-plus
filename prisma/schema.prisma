@@ -57,6 +57,7 @@ model Tenant {
   correspondences  Correspondence[]
   transactions     Transaction[]
   employeeLeaves   EmployeeLeave[]
+  opponentRecords  OpponentRecord[]
 }
 
 enum Plan {
@@ -940,4 +941,32 @@ enum LeaveStatus {
   PENDING // قيد الانتظار
   APPROVED // موافق عليها
   REJECTED // مرفوضة
+}
+
+// ============ OPPONENTS REGISTRY (سجل الخصوم) ============
+
+model OpponentRecord {
+  id        String         @id @default(cuid())
+  number    Int // رقم تسلسلي تلقائي لكل مكتب
+  name      String // اسم الخصم
+  idNumber  String? // رقم الهوية / السجل التجاري
+  phone     String? // رقم الجوال
+  email     String? // البريد الإلكتروني
+  address   String? // العنوان
+  notes     String?        @db.Text // ملاحظات
+  caseIds   Json? // معرّفات القضايا المرتبطة
+  status    OpponentStatus @default(ACTIVE)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+}
+
+enum OpponentStatus {
+  ACTIVE // نشط
+  ARCHIVED // مؤرشف
 }

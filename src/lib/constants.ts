@@ -218,6 +218,12 @@ export const TRANSACTION_STATUS = {
   ARCHIVED: "مؤرشفة",
 } as const;
 
+// سجل الخصوم — حالة الخصم
+export const OPPONENT_STATUS = {
+  ACTIVE: "نشط",
+  ARCHIVED: "مؤرشف",
+} as const;
+
 // الموارد البشرية — أنواع الإجازات
 export const LEAVE_TYPE = {
   ANNUAL: "سنوية",

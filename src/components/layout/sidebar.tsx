@@ -48,7 +48,15 @@ const NAV: NavItem[] = [
   { href: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
   { href: "/dashboard/cases", label: "القضايا", icon: Briefcase },
   { href: "/dashboard/sessions", label: "الجلسات", icon: Gavel },
-  { href: "/dashboard/clients", label: "العملاء", icon: Users },
+  {
+    href: "/dashboard/parties",
+    label: "إدارة الأطراف",
+    icon: Users,
+    children: [
+      { href: "/dashboard/clients", label: "سجل العملاء" },
+      { href: "/dashboard/parties/opponents", label: "سجل الخصوم" },
+    ],
+  },
   { href: "/dashboard/client-requests", label: "طلبات خدمات العملاء", icon: Headphones, permission: "SERVICE_REQUEST_READ" },
   {
     href: "/dashboard/correspondence",
@@ -187,7 +195,12 @@ export function Sidebar() {
 }
 
 function NavGroup({ item, pathname }: { item: NavItem; pathname: string }) {
-  const groupActive = pathname.startsWith(item.href);
+  const groupActive =
+    pathname.startsWith(item.href) ||
+    (item.children?.some(
+      (c) => pathname === c.href || pathname.startsWith(`${c.href}/`),
+    ) ??
+      false);
   const [open, setOpen] = useState(groupActive);
   const Icon = item.icon;
 

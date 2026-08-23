@@ -2,10 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Users, Plus, Eye, Edit, Trash2, Phone, Mail } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Eye,
+  Edit,
+  Trash2,
+  Phone,
+  Mail,
+  MessageSquare,
+  MessageCircle,
+  KeyRound,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/empty-state";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
@@ -40,9 +53,37 @@ export default function ClientsPage() {
     sortDir: "desc",
   });
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const { data, isLoading, isError, error } = useClientsList(filters);
   const deleteMutation = useDeleteClient();
+
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleAllOnPage(ids: string[], checked: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) ids.forEach((id) => next.add(id));
+      else ids.forEach((id) => next.delete(id));
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set());
+  }
+
+  // ميزات التواصل الجماعي — ستُفعّل بعد إعداد Resend/مزود الرسائل
+  function handleBulkComingSoon() {
+    toast.info("سيتم تفعيل هذه الميزة قريباً");
+  }
 
   async function handleDelete() {
     if (!confirmId) return;
@@ -56,6 +97,10 @@ export default function ClientsPage() {
   }
 
   const items = data?.items ?? [];
+  const pageIds = items.map((c) => c.id);
+  const allOnPageSelected =
+    pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const selectedCount = selectedIds.size;
   const isEmpty = !isLoading && items.length === 0;
   const hasFilters = !!(
     filters.q ||
@@ -192,6 +237,43 @@ export default function ClientsPage() {
         </div>
       </Card>
 
+      {selectedCount > 0 && (
+        <Card className="p-3 border-brand-200 bg-brand-50/60">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium text-brand-800">
+              تم تحديد {selectedCount} عميل
+            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleBulkComingSoon}>
+                <Mail className="size-4" />
+                إرسال بريد إلكتروني
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleBulkComingSoon}>
+                <MessageSquare className="size-4" />
+                إرسال رسالة SMS
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleBulkComingSoon}>
+                <MessageCircle className="size-4" />
+                إرسال رسالة WhatsApp
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleBulkComingSoon}>
+                <KeyRound className="size-4" />
+                إرسال بيانات الدخول
+              </Button>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ms-auto text-slate-600"
+              onClick={clearSelection}
+            >
+              <X className="size-4" />
+              إلغاء التحديد
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {isLoading && (
         <Card className="p-4">
           <TableSkeleton rows={6} cols={6} />
@@ -232,6 +314,15 @@ export default function ClientsPage() {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr className="text-right text-xs font-medium text-slate-500 uppercase">
+                  <th className="px-4 py-3 w-10">
+                    <Checkbox
+                      checked={allOnPageSelected}
+                      onChange={(e) =>
+                        toggleAllOnPage(pageIds, e.target.checked)
+                      }
+                      aria-label="تحديد كل العملاء في الصفحة"
+                    />
+                  </th>
                   <th className="px-4 py-3">الاسم</th>
                   <th className="px-4 py-3">النوع</th>
                   <th className="px-4 py-3">التواصل</th>
@@ -244,7 +335,21 @@ export default function ClientsPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {items.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50">
+                  <tr
+                    key={c.id}
+                    className={
+                      selectedIds.has(c.id)
+                        ? "bg-brand-50/50"
+                        : "hover:bg-slate-50"
+                    }
+                  >
+                    <td className="px-4 py-3">
+                      <Checkbox
+                        checked={selectedIds.has(c.id)}
+                        onChange={() => toggleOne(c.id)}
+                        aria-label={`تحديد ${c.name}`}
+                      />
+                    </td>
                     <td className="px-4 py-3 font-medium text-slate-900">
                       <Link
                         href={`/dashboard/clients/${c.id}`}
