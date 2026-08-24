@@ -59,6 +59,8 @@ model Tenant {
   employeeLeaves   EmployeeLeave[]
   opponentRecords  OpponentRecord[]
   documentBorrowings DocumentBorrowing[]
+  consultations    Consultation[]
+  courtJudgments   CourtJudgment[]
 }
 
 enum Plan {
@@ -1002,4 +1004,89 @@ enum BorrowingStatus {
   DELIVERED // تم التسليم
   RETURNED // تم الإرجاع
   REJECTED // مرفوض
+}
+
+// ============ LEGAL CONSULTATIONS (الاستشارات القانونية) ============
+
+model Consultation {
+  id          String             @id @default(cuid())
+  number      Int // رقم تسلسلي تلقائي لكل مكتب
+  title       String // اسم/عنوان الاستشارة
+  type        ConsultationType   @default(LEGAL_CONSULTATION)
+  clientId    String? // العميل (اختياري)
+  clientName  String? // اسم العميل (لقطة وقت الإنشاء)
+  assignedTo  Json? // المسؤولون [{ id, name }]
+  dateHijri   String? // التاريخ (هجري)
+  date        DateTime // التاريخ (ميلادي)
+  description String?            @db.Text // الوصف
+  status      ConsultationStatus @default(ACTIVE)
+  attachments Json? // مرفقات
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+  @@index([tenantId, status])
+}
+
+enum ConsultationType {
+  LEGAL_CONSULTATION // استشارة قانونية
+  REGULATIONS_REVIEW // مراجعة أنظمة ولوائح
+  CONTRACT_REVIEW // مراجعة عقود
+  OTHER // أخرى
+}
+
+enum ConsultationStatus {
+  ACTIVE // قائمة
+  COMPLETED // منتهية
+  CANCELLED // ملغاة
+}
+
+// ============ COURT JUDGMENTS (الأحكام) ============
+
+model CourtJudgment {
+  id               String          @id @default(cuid())
+  caseId           String // القضية المرتبطة
+  caseNumber       String // رقم القضية (لقطة وقت الإنشاء)
+  caseTitle        String // اسم القضية (لقطة وقت الإنشاء)
+  judgmentLevel    JudgmentLevel   @default(FIRST_INSTANCE)
+  judgmentResult   JudgmentResult  @default(PARTIAL)
+  judgmentSummary  String?         @db.Text // ملخص نص الحكم
+  receiveDate      DateTime? // تاريخ استلام الحكم (ميلادي)
+  receiveDateHijri String? // تاريخ استلام الحكم (هجري)
+  objectionStatus  ObjectionStatus @default(PENDING)
+  objectionDeadline DateTime? // آخر موعد للاعتراض (ميلادي)
+  notes            String?         @db.Text // ملاحظات
+  attachments      Json? // مرفقات
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, objectionStatus])
+  @@index([tenantId, caseId])
+}
+
+enum JudgmentLevel {
+  FIRST_INSTANCE // ابتدائية
+  APPEAL // استئناف
+  SUPREME // عليا
+}
+
+enum JudgmentResult {
+  IN_FAVOR // لصالحنا
+  AGAINST // ضدنا
+  PARTIAL // جزئي
+}
+
+enum ObjectionStatus {
+  PRE_FILING // ما قبل قيد الدعوى
+  PENDING // قيد المهلة
+  NO_OBJECTION // بدون اعتراض
+  OBJECTED // تم الاعتراض
 }

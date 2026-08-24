@@ -232,6 +232,43 @@ export const BORROWING_STATUS = {
   REJECTED: "مرفوض",
 } as const;
 
+// الاستشارات القانونية — نوع الاستشارة
+export const CONSULTATION_TYPE = {
+  LEGAL_CONSULTATION: "استشارة قانونية",
+  REGULATIONS_REVIEW: "مراجعة أنظمة ولوائح",
+  CONTRACT_REVIEW: "مراجعة عقود",
+  OTHER: "أخرى",
+} as const;
+
+// الاستشارات القانونية — حالة الاستشارة
+export const CONSULTATION_STATUS = {
+  ACTIVE: "قائمة",
+  COMPLETED: "منتهية",
+  CANCELLED: "ملغاة",
+} as const;
+
+// الأحكام — درجة الترافع
+export const JUDGMENT_LEVEL = {
+  FIRST_INSTANCE: "ابتدائية",
+  APPEAL: "استئناف",
+  SUPREME: "عليا",
+} as const;
+
+// الأحكام — نتيجة الحكم
+export const JUDGMENT_RESULT = {
+  IN_FAVOR: "لصالحنا",
+  AGAINST: "ضدنا",
+  PARTIAL: "جزئي",
+} as const;
+
+// الأحكام — حالة الاعتراض
+export const OBJECTION_STATUS = {
+  PRE_FILING: "ما قبل قيد الدعوى",
+  PENDING: "قيد المهلة",
+  NO_OBJECTION: "بدون اعتراض",
+  OBJECTED: "تم الاعتراض",
+} as const;
+
 // الموارد البشرية — أنواع الإجازات
 export const LEAVE_TYPE = {
   ANNUAL: "سنوية",

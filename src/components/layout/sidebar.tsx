@@ -25,6 +25,7 @@ import {
   Users2,
   Globe,
   BookOpen,
+  FolderKanban,
   ChevronDown,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
@@ -56,6 +57,15 @@ const NAV: NavItem[] = [
     children: [
       { href: "/dashboard/clients", label: "سجل العملاء" },
       { href: "/dashboard/parties/opponents", label: "سجل الخصوم" },
+    ],
+  },
+  {
+    href: "/dashboard/consultations",
+    label: "إدارة المشاريع",
+    icon: FolderKanban,
+    permission: "CONSULTATION_READ",
+    children: [
+      { href: "/dashboard/consultations", label: "الاستشارات" },
     ],
   },
   { href: "/dashboard/client-requests", label: "طلبات خدمات العملاء", icon: Headphones, permission: "SERVICE_REQUEST_READ" },
