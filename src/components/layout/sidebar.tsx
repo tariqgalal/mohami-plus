@@ -26,6 +26,7 @@ import {
   Globe,
   BookOpen,
   FolderKanban,
+  ListTodo,
   ChevronDown,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
@@ -50,6 +51,7 @@ const NAV: NavItem[] = [
   { href: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
   { href: "/dashboard/cases", label: "القضايا", icon: Briefcase },
   { href: "/dashboard/sessions", label: "الجلسات", icon: Gavel },
+  { href: "/dashboard/tasks", label: "المهام", icon: ListTodo, permission: "TASK_READ" },
   {
     href: "/dashboard/parties",
     label: "إدارة الأطراف",

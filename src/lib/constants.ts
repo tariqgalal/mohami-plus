@@ -284,6 +284,39 @@ export const LEAVE_STATUS = {
   REJECTED: "مرفوضة",
 } as const;
 
+// المهام — الأولوية
+export const TASK_PRIORITY = {
+  URGENT: "عاجل",
+  NORMAL: "عادي",
+  IMPORTANT: "مهم",
+  URGENT_IMPORTANT: "عاجل مهم",
+} as const;
+
+// المهام — الحالة
+export const TASK_STATUS = {
+  PENDING: "قيد التنفيذ",
+  AWAITING_APPROVAL: "بانتظار الاعتماد",
+  COMPLETED: "منجزة",
+  CANCELLED: "ملغاة",
+} as const;
+
+// المهام — نوع المشروع المرتبط
+export const TASK_PROJECT_TYPE = {
+  NONE: "بدون",
+  CASE: "قضية",
+  EXECUTION: "تنفيذ",
+  CONSULTATION: "استشارة",
+  OTHER_PROJECT: "مشروع آخر",
+} as const;
+
+// المهام — الردود الجاهزة الافتراضية
+export const DEFAULT_TASK_TEMPLATES = [
+  "تم تنفيذ المهمة بنجاح",
+  "تم اضافة المرفقات المطلوبة",
+  "تم حضور الاجتماع مع المعنيين",
+  "تم ارسال المذكرة للجهة المعنية",
+] as const;
+
 export const TENANT_STATUS = {
   TRIAL: "فترة تجريبية",
   ACTIVE: "نشط",

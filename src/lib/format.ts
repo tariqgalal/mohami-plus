@@ -71,6 +71,21 @@ export function formatFileSize(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
+/** يحوّل عدد الثواني إلى صيغة HH:MM:SS (مناسب لعدّاد الوقت). */
+export function formatDuration(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(sec)}`;
+}
+
+/** رقم المهمة التلقائي بصيغة MAIN-0001. */
+export function formatTaskNumber(number: number): string {
+  return `MAIN-${String(number).padStart(4, "0")}`;
+}
+
 export function generateCaseNumber(year: number, sequence: number): string {
   return `QD-${year}-${String(sequence).padStart(3, "0")}`;
 }

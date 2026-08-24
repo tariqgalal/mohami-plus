@@ -61,6 +61,8 @@ model Tenant {
   documentBorrowings DocumentBorrowing[]
   consultations    Consultation[]
   courtJudgments   CourtJudgment[]
+  tasks            Task[]
+  taskTemplates    TaskTemplate[]
 }
 
 enum Plan {
@@ -1089,4 +1091,83 @@ enum ObjectionStatus {
   PENDING // قيد المهلة
   NO_OBJECTION // بدون اعتراض
   OBJECTED // تم الاعتراض
+}
+
+// ============ TASKS (المهام) ============
+
+model Task {
+  id          String          @id @default(cuid())
+  number      Int // رقم تسلسلي تلقائي لكل مكتب (يُعرض MAIN-{number})
+  title       String // عنوان المهمة
+  description String?         @db.Text // وصف المهمة
+  priority    TaskPriority    @default(NORMAL) // الأولوية
+  status      TaskStatus      @default(PENDING) // الحالة
+  projectType TaskProjectType @default(NONE) // نوع المشروع المرتبط
+
+  // ربط اختياري بمشروع/عميل (لقطة وقت الإنشاء)
+  caseId     String? // القضية المرتبطة (عند projectType=CASE/EXECUTION)
+  clientId   String? // العميل المرتبط
+  clientName String? // اسم العميل (لقطة)
+
+  assignedTo   Json? // المكلّفون [{ id, name }]
+  dueDate      DateTime? // تاريخ الاستحقاق (ميلادي)
+  dueDateHijri String? // تاريخ الاستحقاق (هجري)
+
+  // عداد الوقت
+  timeSpent      Int       @default(0) // إجمالي الثواني المسجّلة
+  timerStartedAt DateTime? // وقت بدء العدّاد الحالي (null = متوقّف)
+
+  // خيارات إضافية
+  isConfidential             Boolean @default(false) // مهمة سرية
+  completedWithoutAssignment Boolean @default(false) // أُنجزت بدون تكليف
+
+  reply       String? @db.Text // الرد/التعليق (يمكن اختياره من الردود الجاهزة)
+  attachments Json? // مرفقات
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId    String
+  tenant      Tenant  @relation(fields: [tenantId], references: [id])
+  createdById String?
+
+  @@unique([tenantId, number])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, priority])
+}
+
+model TaskTemplate {
+  id        String   @id @default(cuid())
+  text      String   @db.Text // نص الرد الجاهز
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+}
+
+enum TaskPriority {
+  URGENT           // عاجل
+  NORMAL           // عادي
+  IMPORTANT        // مهم
+  URGENT_IMPORTANT // عاجل مهم
+}
+
+enum TaskStatus {
+  PENDING           // قيد التنفيذ
+  AWAITING_APPROVAL // بانتظار الاعتماد
+  COMPLETED         // منجزة
+  CANCELLED         // ملغاة
+}
+
+enum TaskProjectType {
+  NONE          // بدون
+  CASE          // قضية
+  EXECUTION     // تنفيذ
+  CONSULTATION  // استشارة
+  OTHER_PROJECT // مشروع آخر
 }

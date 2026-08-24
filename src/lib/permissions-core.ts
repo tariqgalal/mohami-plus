@@ -22,6 +22,7 @@ export type Permission =
   | "BORROWING_READ" | "BORROWING_CREATE" | "BORROWING_UPDATE" | "BORROWING_DELETE"
   | "CONSULTATION_READ" | "CONSULTATION_CREATE" | "CONSULTATION_UPDATE" | "CONSULTATION_DELETE"
   | "JUDGMENT_READ" | "JUDGMENT_CREATE" | "JUDGMENT_UPDATE" | "JUDGMENT_DELETE"
+  | "TASK_READ" | "TASK_CREATE" | "TASK_UPDATE" | "TASK_DELETE" | "TASK_TEMPLATE_MANAGE"
   | "HR_READ" | "HR_MANAGE";
 
 const legalManagers: AppRole[] = ["FIRM_ADMIN", "SENIOR_LAWYER", "LAWYER"];
@@ -59,6 +60,9 @@ const permissions: Record<Permission, readonly AppRole[]> = {
   CONSULTATION_UPDATE: legalManagers, CONSULTATION_DELETE: legalManagers,
   JUDGMENT_READ: legalReaders, JUDGMENT_CREATE: legalManagers,
   JUDGMENT_UPDATE: legalManagers, JUDGMENT_DELETE: legalManagers,
+  TASK_READ: legalReaders, TASK_CREATE: officeOperators,
+  TASK_UPDATE: officeOperators, TASK_DELETE: legalManagers,
+  TASK_TEMPLATE_MANAGE: legalManagers,
   HR_READ: ["FIRM_ADMIN", "SENIOR_LAWYER"], HR_MANAGE: ["FIRM_ADMIN"],
 };
 
