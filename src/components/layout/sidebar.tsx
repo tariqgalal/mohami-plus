@@ -66,6 +66,7 @@ const NAV: NavItem[] = [
     permission: "CONSULTATION_READ",
     children: [
       { href: "/dashboard/consultations", label: "الاستشارات" },
+      { href: "/dashboard/judgments", label: "الأحكام" },
     ],
   },
   { href: "/dashboard/client-requests", label: "طلبات خدمات العملاء", icon: Headphones, permission: "SERVICE_REQUEST_READ" },
