@@ -19,11 +19,15 @@ import {
 import { POA_STATUS } from "@/lib/constants";
 import { createPowerOfAttorneySchema } from "@/lib/validations/power-of-attorney";
 import { useClients } from "@/hooks/use-clients";
+import { useTeam } from "@/hooks/use-team";
+import { useCases } from "@/hooks/use-cases";
+import { useConsultations } from "@/hooks/use-consultations";
 import {
   useCreatePowerOfAttorney,
   useUpdatePowerOfAttorney,
 } from "@/hooks/use-powers-of-attorney";
 import { toast } from "@/store/toast-store";
+import { CheckboxGroup } from "@/components/shared/checkbox-group";
 
 interface PoaInitial {
   id?: string;
@@ -35,6 +39,10 @@ interface PoaInitial {
   endDateHijri?: string;
   status?: string;
   notes?: string | null;
+  employeeIds?: string[];
+  caseIds?: string[];
+  executionIds?: string[];
+  consultationIds?: string[];
 }
 
 interface PoaFormValues {
@@ -46,6 +54,10 @@ interface PoaFormValues {
   endDateHijri: string;
   status: string;
   notes: string;
+  employeeIds: string[];
+  caseIds: string[];
+  executionIds: string[];
+  consultationIds: string[];
 }
 
 interface PoaFormProps {
@@ -56,10 +68,18 @@ interface PoaFormProps {
 export function PoaForm({ initial, mode }: PoaFormProps) {
   const router = useRouter();
   const { data: clients } = useClients();
+  const { data: team } = useTeam();
+  const { data: casesData } = useCases({ page: 1, limit: 1000 });
+  const { data: consultationsData } = useConsultations({ page: 1, limit: 1000 });
   const createMut = useCreatePowerOfAttorney();
   const updateMut = useUpdatePowerOfAttorney(initial?.id ?? "");
   const [attachments, setAttachments] = useState<UploadedFileInfo[]>([]);
   const [pendingFile, setPendingFile] = useState<UploadedFileInfo | null>(null);
+
+  const allCases = casesData?.items ?? [];
+  const regularCases = allCases.filter((c) => c.caseType !== "EXECUTION");
+  const executionCases = allCases.filter((c) => c.caseType === "EXECUTION");
+  const consultations = consultationsData?.items ?? [];
 
   const {
     register,
@@ -80,6 +100,10 @@ export function PoaForm({ initial, mode }: PoaFormProps) {
       endDateHijri: initial?.endDateHijri ?? "",
       status: initial?.status ?? "ACTIVE",
       notes: initial?.notes ?? "",
+      employeeIds: initial?.employeeIds ?? [],
+      caseIds: initial?.caseIds ?? [],
+      executionIds: initial?.executionIds ?? [],
+      consultationIds: initial?.consultationIds ?? [],
     },
   });
 
@@ -224,6 +248,96 @@ export function PoaForm({ initial, mode }: PoaFormProps) {
               rows={3}
               placeholder="أي ملاحظات على الوكالة..."
               {...register("notes")}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>الجهات المرتبطة بالوكالة</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>
+              الموظفون المخوّلون <span className="text-red-600">*</span>
+            </Label>
+            <Controller
+              control={control}
+              name="employeeIds"
+              render={({ field }) => (
+                <CheckboxGroup
+                  options={(team ?? []).map((t) => ({
+                    value: t.id,
+                    label: t.name,
+                  }))}
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                  emptyText="لا يوجد أعضاء فريق"
+                />
+              )}
+            />
+            {errors.employeeIds && (
+              <p className="text-xs text-red-600">
+                {errors.employeeIds.message as string}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label>القضايا المرتبطة (اختياري)</Label>
+            <Controller
+              control={control}
+              name="caseIds"
+              render={({ field }) => (
+                <CheckboxGroup
+                  options={regularCases.map((c) => ({
+                    value: c.id,
+                    label: `${c.caseNumber} — ${c.title}`,
+                  }))}
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                  emptyText="لا توجد قضايا"
+                />
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>طلبات التنفيذ المرتبطة (اختياري)</Label>
+            <Controller
+              control={control}
+              name="executionIds"
+              render={({ field }) => (
+                <CheckboxGroup
+                  options={executionCases.map((c) => ({
+                    value: c.id,
+                    label: `${c.caseNumber} — ${c.title}`,
+                  }))}
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                  emptyText="لا توجد طلبات تنفيذ"
+                />
+              )}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>الاستشارات المرتبطة (اختياري)</Label>
+            <Controller
+              control={control}
+              name="consultationIds"
+              render={({ field }) => (
+                <CheckboxGroup
+                  options={consultations.map((c) => ({
+                    value: c.id,
+                    label: `#${c.number} — ${c.title}`,
+                  }))}
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                  emptyText="لا توجد استشارات"
+                />
+              )}
             />
           </div>
         </CardContent>

@@ -8,6 +8,10 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+function toStringArray(v: unknown): string[] {
+  return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
+}
+
 export default async function EditPowerOfAttorneyPage({ params }: PageProps) {
   const { id } = await params;
   const tenantId = await getTenantId();
@@ -45,6 +49,10 @@ export default async function EditPowerOfAttorneyPage({ params }: PageProps) {
           endDateHijri: poa.endDateHijri,
           status: poa.status,
           notes: poa.notes,
+          employeeIds: toStringArray(poa.employeeIds),
+          caseIds: toStringArray(poa.caseIds),
+          executionIds: toStringArray(poa.executionIds),
+          consultationIds: toStringArray(poa.consultationIds),
         }}
       />
     </div>

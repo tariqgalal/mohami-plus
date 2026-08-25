@@ -17,6 +17,12 @@ export const createPowerOfAttorneySchema = z
     status: poaStatusEnum.optional(),
     notes: z.string().optional().nullable(),
     attachments: z.array(attachmentSchema).optional(),
+    employeeIds: z
+      .array(z.string())
+      .min(1, "يجب اختيار موظف واحد على الأقل"),
+    caseIds: z.array(z.string()).optional(),
+    executionIds: z.array(z.string()).optional(),
+    consultationIds: z.array(z.string()).optional(),
   })
   .refine((v) => v.endDate >= v.startDate, {
     message: "تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية",
@@ -34,6 +40,13 @@ export const updatePowerOfAttorneySchema = z
     status: poaStatusEnum.optional(),
     notes: z.string().optional().nullable(),
     attachments: z.array(attachmentSchema).optional(),
+    employeeIds: z
+      .array(z.string())
+      .min(1, "يجب اختيار موظف واحد على الأقل")
+      .optional(),
+    caseIds: z.array(z.string()).optional(),
+    executionIds: z.array(z.string()).optional(),
+    consultationIds: z.array(z.string()).optional(),
   })
   .refine(
     (v) => !v.startDate || !v.endDate || v.endDate >= v.startDate,

@@ -70,6 +70,55 @@ export async function getPowerOfAttorney(tenantId: string, id: string) {
   });
 }
 
+function idArray(v: unknown): string[] {
+  return Array.isArray(v)
+    ? v.filter((x): x is string => typeof x === "string")
+    : [];
+}
+
+/** يجلب الوكالة مع أسماء الجهات المرتبطة (موظفين، قضايا، تنفيذ، استشارات) */
+export async function getPowerOfAttorneyWithRelations(
+  tenantId: string,
+  id: string,
+) {
+  const poa = await getPowerOfAttorney(tenantId, id);
+  if (!poa) return null;
+
+  const employeeIds = idArray(poa.employeeIds);
+  const caseIds = idArray(poa.caseIds);
+  const executionIds = idArray(poa.executionIds);
+  const consultationIds = idArray(poa.consultationIds);
+
+  const [employees, cases, executions, consultations] = await Promise.all([
+    employeeIds.length
+      ? prisma.user.findMany({
+          where: { tenantId, id: { in: employeeIds } },
+          select: { id: true, name: true },
+        })
+      : [],
+    caseIds.length
+      ? prisma.case.findMany({
+          where: { tenantId, id: { in: caseIds } },
+          select: { id: true, caseNumber: true, title: true },
+        })
+      : [],
+    executionIds.length
+      ? prisma.case.findMany({
+          where: { tenantId, id: { in: executionIds } },
+          select: { id: true, caseNumber: true, title: true },
+        })
+      : [],
+    consultationIds.length
+      ? prisma.consultation.findMany({
+          where: { tenantId, id: { in: consultationIds } },
+          select: { id: true, number: true, title: true },
+        })
+      : [],
+  ]);
+
+  return { poa, relations: { employees, cases, executions, consultations } };
+}
+
 export async function createPowerOfAttorney(
   tenantId: string,
   userId: string,
@@ -97,6 +146,13 @@ export async function createPowerOfAttorney(
         attachments: input.attachments?.length
           ? (input.attachments as unknown as Prisma.InputJsonValue)
           : Prisma.JsonNull,
+        employeeIds: (input.employeeIds ??
+          []) as unknown as Prisma.InputJsonValue,
+        caseIds: (input.caseIds ?? []) as unknown as Prisma.InputJsonValue,
+        executionIds: (input.executionIds ??
+          []) as unknown as Prisma.InputJsonValue,
+        consultationIds: (input.consultationIds ??
+          []) as unknown as Prisma.InputJsonValue,
       },
     });
 
@@ -154,6 +210,27 @@ export async function updatePowerOfAttorney(
               attachments: input.attachments.length
                 ? (input.attachments as unknown as Prisma.InputJsonValue)
                 : Prisma.JsonNull,
+            }
+          : {}),
+        ...(input.employeeIds
+          ? {
+              employeeIds:
+                input.employeeIds as unknown as Prisma.InputJsonValue,
+            }
+          : {}),
+        ...(input.caseIds
+          ? { caseIds: input.caseIds as unknown as Prisma.InputJsonValue }
+          : {}),
+        ...(input.executionIds
+          ? {
+              executionIds:
+                input.executionIds as unknown as Prisma.InputJsonValue,
+            }
+          : {}),
+        ...(input.consultationIds
+          ? {
+              consultationIds:
+                input.consultationIds as unknown as Prisma.InputJsonValue,
             }
           : {}),
       },

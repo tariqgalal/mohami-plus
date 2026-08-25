@@ -767,6 +767,10 @@ model PowerOfAttorney {
   status         POAStatus @default(ACTIVE)
   notes          String?   @db.Text
   attachments    Json? // مرفقات الوكالة
+  employeeIds     Json? // معرّفات الموظفين المخوّلين (مطلوب)
+  caseIds         Json? // القضايا المرتبطة (اختياري)
+  executionIds    Json? // طلبات التنفيذ المرتبطة (اختياري)
+  consultationIds Json? // الاستشارات المرتبطة (اختياري)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

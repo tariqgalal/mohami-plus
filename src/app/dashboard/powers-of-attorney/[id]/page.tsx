@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Edit, FileText, User } from "lucide-react";
-import { getPowerOfAttorney } from "@/services/power-of-attorney-service";
+import { Edit, FileText, User, Users, Briefcase, Landmark, MessagesSquare } from "lucide-react";
+import { getPowerOfAttorneyWithRelations } from "@/services/power-of-attorney-service";
 import { getTenantId } from "@/lib/tenant";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { DualDateDisplay } from "@/components/shared/dual-date-display";
 import {
@@ -23,8 +24,9 @@ type Attachment = { url: string; name: string; size?: number; type?: string };
 export default async function PowerOfAttorneyDetailPage({ params }: PageProps) {
   const { id } = await params;
   const tenantId = await getTenantId();
-  const poa = await getPowerOfAttorney(tenantId, id);
-  if (!poa) notFound();
+  const result = await getPowerOfAttorneyWithRelations(tenantId, id);
+  if (!result) notFound();
+  const { poa, relations } = result;
 
   const attachments = Array.isArray(poa.attachments)
     ? (poa.attachments as unknown as Attachment[])
@@ -99,6 +101,54 @@ export default async function PowerOfAttorneyDetailPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
+      {(relations.employees.length > 0 ||
+        relations.cases.length > 0 ||
+        relations.executions.length > 0 ||
+        relations.consultations.length > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>الجهات المرتبطة</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <RelationRow
+              icon={Users}
+              label="الموظفون المخوّلون"
+              items={relations.employees.map((e) => ({
+                key: e.id,
+                text: e.name,
+              }))}
+            />
+            <RelationRow
+              icon={Briefcase}
+              label="القضايا"
+              items={relations.cases.map((c) => ({
+                key: c.id,
+                text: `${c.caseNumber} — ${c.title}`,
+                href: `/dashboard/cases/${c.id}`,
+              }))}
+            />
+            <RelationRow
+              icon={Landmark}
+              label="طلبات التنفيذ"
+              items={relations.executions.map((c) => ({
+                key: c.id,
+                text: `${c.caseNumber} — ${c.title}`,
+                href: `/dashboard/cases/${c.id}`,
+              }))}
+            />
+            <RelationRow
+              icon={MessagesSquare}
+              label="الاستشارات"
+              items={relations.consultations.map((c) => ({
+                key: c.id,
+                text: `#${c.number} — ${c.title}`,
+                href: `/dashboard/consultations/${c.id}`,
+              }))}
+            />
+          </CardContent>
+        </Card>
+      )}
+
       {attachments.length > 0 && (
         <Card>
           <CardHeader>
@@ -126,6 +176,44 @@ export default async function PowerOfAttorneyDetailPage({ params }: PageProps) {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+function RelationRow({
+  icon: Icon,
+  label,
+  items,
+}: {
+  icon: typeof Users;
+  label: string;
+  items: { key: string; text: string; href?: string }[];
+}) {
+  if (items.length === 0) return null;
+  return (
+    <div>
+      <p className="text-xs text-slate-500 mb-2 flex items-center gap-1.5">
+        <Icon className="size-3.5" />
+        {label} ({items.length})
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {items.map((it) =>
+          it.href ? (
+            <Link key={it.key} href={it.href}>
+              <Badge
+                variant="secondary"
+                className="hover:bg-brand-100 transition-colors"
+              >
+                {it.text}
+              </Badge>
+            </Link>
+          ) : (
+            <Badge key={it.key} variant="secondary">
+              {it.text}
+            </Badge>
+          ),
+        )}
+      </div>
     </div>
   );
 }

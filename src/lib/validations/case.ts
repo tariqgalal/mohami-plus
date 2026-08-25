@@ -76,7 +76,7 @@ export const caseFiltersSchema = z.object({
   sortBy: z.enum(["createdAt", "updatedAt", "priority", "value"]).default("createdAt"),
   sortDir: z.enum(["asc", "desc"]).default("desc"),
   page: z.coerce.number().min(1).default(1),
-  limit: z.coerce.number().min(1).max(100).default(20),
+  limit: z.coerce.number().min(1).max(1000).default(20),
 });
 
 export type CreateCaseInput = z.infer<typeof createCaseSchema>;
