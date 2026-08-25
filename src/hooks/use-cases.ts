@@ -123,3 +123,31 @@ export function useDeleteCase() {
     },
   });
 }
+
+export interface CaseCounts {
+  counts: Record<string, number>;
+  total: number;
+}
+
+export function useCaseCounts() {
+  return useQuery({
+    queryKey: ["cases", "counts"],
+    queryFn: () => fetchJson<CaseCounts>(`/api/cases/counts`),
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useArchiveCase() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, archived }: { id: string; archived: boolean }) =>
+      fetchJson<{ id: string }>(`/api/cases/${id}/archive`, {
+        method: "PATCH",
+        body: JSON.stringify({ archived }),
+      }),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: ["cases"] });
+      qc.invalidateQueries({ queryKey: ["cases", id] });
+    },
+  });
+}

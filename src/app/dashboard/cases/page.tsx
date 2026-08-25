@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Briefcase, Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { Briefcase, Plus, Eye, Edit, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -11,12 +11,18 @@ import { Pagination } from "@/components/shared/pagination";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { CaseFilters } from "@/components/cases/case-filters";
+import { CaseStatusTabs } from "@/components/cases/case-status-tabs";
 import {
   CaseStatusBadge,
   PriorityBadge,
 } from "@/components/cases/case-status-badge";
 import { ExportButton } from "@/components/shared/export-button";
-import { useCases, useDeleteCase, type CaseListItem } from "@/hooks/use-cases";
+import {
+  useCases,
+  useCaseCounts,
+  useArchiveCase,
+  type CaseListItem,
+} from "@/hooks/use-cases";
 import { CASE_TYPES, CASE_STATUS, PRIORITY_LABELS } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { toast } from "@/store/toast-store";
@@ -32,16 +38,17 @@ export default function CasesPage() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const { data, isLoading, isError, error } = useCases(filters);
-  const deleteMutation = useDeleteCase();
+  const { data: countsData } = useCaseCounts();
+  const archiveMutation = useArchiveCase();
 
-  async function handleDelete() {
+  async function handleArchive() {
     if (!confirmId) return;
     try {
-      await deleteMutation.mutateAsync(confirmId);
-      toast.success("تم حذف القضية بنجاح");
+      await archiveMutation.mutateAsync({ id: confirmId, archived: true });
+      toast.success("تم نقل القضية إلى الأرشيف");
       setConfirmId(null);
     } catch (e: any) {
-      toast.error(e.message || "فشل حذف القضية");
+      toast.error(e.message || "فشل أرشفة القضية");
     }
   }
 
@@ -118,6 +125,12 @@ export default function CasesPage() {
               return (json.data?.items ?? []) as CaseListItem[];
             }}
           />
+          <Link href="/dashboard/cases/archive">
+            <Button variant="outline">
+              <Archive className="size-4" />
+              الأرشيف
+            </Button>
+          </Link>
           <Link href="/dashboard/cases/new">
             <Button>
               <Plus className="size-4" />
@@ -126,6 +139,15 @@ export default function CasesPage() {
           </Link>
         </div>
       </div>
+
+      <CaseStatusTabs
+        value={filters.status}
+        counts={countsData?.counts ?? {}}
+        total={countsData?.total ?? 0}
+        onChange={(status) =>
+          setFilters((f) => ({ ...f, status: status as never, page: 1 }))
+        }
+      />
 
       <Card className="p-4">
         <CaseFilters value={filters} onChange={setFilters} />
@@ -229,10 +251,10 @@ export default function CasesPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            aria-label="الحذف غير متاح"
-                            disabled
+                            aria-label="أرشفة"
+                            onClick={() => setConfirmId(c.id)}
                           >
-                            <Trash2 className="size-4 text-red-500" />
+                            <Archive className="size-4 text-amber-600" />
                           </Button>
                         </div>
                       </td>
@@ -259,11 +281,11 @@ export default function CasesPage() {
       <ConfirmDialog
         open={!!confirmId}
         onOpenChange={(o) => !o && setConfirmId(null)}
-        title="الحذف غير متاح"
-        description="الحذف النهائي للقضايا معطّل حفاظاً على السجل القانوني."
-        confirmText="مغلق"
-        loading={deleteMutation.isPending}
-        onConfirm={handleDelete}
+        title="أرشفة القضية"
+        description="سيتم نقل القضية إلى الأرشيف وإخفاؤها من القائمة الرئيسية. يمكنك استعادتها لاحقاً من صفحة الأرشيف."
+        confirmText="أرشفة"
+        loading={archiveMutation.isPending}
+        onConfirm={handleArchive}
       />
     </div>
   );

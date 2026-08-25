@@ -57,12 +57,16 @@ export const CASE_TYPES = {
 export const CASE_STATUS = {
   OPEN: "مفتوحة",
   IN_PROGRESS: "جارية",
+  PENDING: "منظورة",
+  PRE_FILING: "ما قبل قيد الدعوى",
+  DRAFT: "مسودة",
   ON_HOLD: "معلقة",
+  SUSPENDED: "معلقة",
+  APPEALED: "مستأنفة",
   WON: "مكسوبة",
   LOST: "خاسرة",
   SETTLED: "تسوية",
   CLOSED: "مغلقة",
-  APPEALED: "مستأنفة",
 } as const;
 
 export const PRIORITY_LABELS = {

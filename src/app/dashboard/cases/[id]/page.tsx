@@ -33,6 +33,7 @@ import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 import { CASE_TYPES, USER_ROLES } from "@/lib/constants";
 import { CaseDetailActions } from "@/components/cases/case-detail-actions";
 import { CasePrintButtons } from "@/components/cases/case-print-buttons";
+import { CaseArchiveButton } from "@/components/cases/case-archive-button";
 import { AttachmentInput } from "@/components/shared/attachment-input";
 
 interface PageProps {
@@ -69,12 +70,18 @@ export default async function CaseDetailPage({ params }: PageProps) {
             <Badge variant="outline">
               {(CASE_TYPES as Record<string, string>)[item.caseType]}
             </Badge>
+            {item.archivedAt && (
+              <Badge variant="secondary" className="gap-1">
+                مؤرشفة
+              </Badge>
+            )}
           </div>
           <h1 className="text-2xl font-bold text-slate-900">{item.title}</h1>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           <CasePrintButtons caseId={id} />
+          <CaseArchiveButton caseId={id} archived={!!item.archivedAt} />
           <Link href={`/dashboard/cases/${id}/edit`}>
             <Button>
               <Edit className="size-4" />
@@ -131,8 +138,15 @@ export default async function CaseDetailPage({ params }: PageProps) {
                   <CardTitle className="text-base">تفاصيل القضية</CardTitle>
                 </CardHeader>
                 <CardContent className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <KV label="التصنيف الرئيسي" value={item.classification} />
+                  <KV label="نوع الدعوى" value={item.lawsuitType} />
                   <KV label="المحكمة" value={item.court} />
                   <KV label="مدينة المحكمة" value={item.courtCity} />
+                  <KV label="الفرع" value={item.branch} />
+                  <KV
+                    label="رقم المعاملة في المنشأة"
+                    value={item.establishmentTxnNumber}
+                  />
                   <KV
                     label="تاريخ رفع الدعوى"
                     value={formatDate(item.filingDate)}

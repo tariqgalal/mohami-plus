@@ -7,7 +7,11 @@ const STATUS_VARIANTS: Record<
 > = {
   OPEN: "default",
   IN_PROGRESS: "default",
+  PENDING: "default",
+  PRE_FILING: "outline",
+  DRAFT: "outline",
   ON_HOLD: "warning",
+  SUSPENDED: "warning",
   WON: "success",
   LOST: "destructive",
   SETTLED: "secondary",

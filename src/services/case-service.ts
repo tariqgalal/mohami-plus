@@ -15,6 +15,9 @@ import type {
 export async function listCases(tenantId: string, filters: CaseFiltersInput) {
   const where: Prisma.CaseWhereInput = { tenantId };
 
+  // الأرشيف: افتراضياً نعرض القضايا غير المؤرشفة فقط
+  where.archivedAt = filters.archived ? { not: null } : null;
+
   if (filters.q) {
     where.OR = [
       { title: { contains: filters.q, mode: "insensitive" } },
@@ -140,6 +143,10 @@ export async function createCase(
         title: input.title,
         description: input.description ?? null,
         caseType: input.caseType,
+        classification: input.classification ?? null,
+        lawsuitType: input.lawsuitType ?? null,
+        branch: input.branch ?? null,
+        establishmentTxnNumber: input.establishmentTxnNumber ?? null,
         court: input.court,
         courtCity: input.courtCity ?? null,
         status: input.status ?? "OPEN",
@@ -234,6 +241,10 @@ export async function updateCase(
         title: input.title,
         description: input.description,
         caseType: input.caseType,
+        classification: input.classification,
+        lawsuitType: input.lawsuitType,
+        branch: input.branch,
+        establishmentTxnNumber: input.establishmentTxnNumber,
         court: input.court,
         courtCity: input.courtCity,
         status: input.status,
@@ -324,4 +335,54 @@ export async function deleteCase(
   _id: string,
 ) {
   throw new Error("الحذف النهائي للقضايا غير مدعوم");
+}
+
+/** عدد القضايا (غير المؤرشفة) حسب كل حالة — للتابات */
+export async function countCasesByStatus(tenantId: string) {
+  const rows = await prisma.case.groupBy({
+    by: ["status"],
+    where: { tenantId, archivedAt: null },
+    _count: { _all: true },
+  });
+  const counts: Record<string, number> = {};
+  let total = 0;
+  for (const r of rows) {
+    counts[r.status] = r._count._all;
+    total += r._count._all;
+  }
+  return { counts, total };
+}
+
+/** أرشفة / إلغاء أرشفة قضية */
+export async function setCaseArchived(
+  tenantId: string,
+  userId: string,
+  id: string,
+  archived: boolean,
+) {
+  const existing = await prisma.case.findFirst({
+    where: { id, tenantId },
+    select: { id: true, title: true },
+  });
+  if (!existing) return null;
+
+  const updated = await prisma.$transaction(async (tx) => {
+    const c = await tx.case.update({
+      where: { id },
+      data: { archivedAt: archived ? new Date() : null },
+    });
+    await tx.activity.create({
+      data: {
+        tenantId,
+        userId,
+        action: archived ? "archived" : "unarchived",
+        entity: "case",
+        entityId: id,
+        caseId: id,
+      },
+    });
+    return c;
+  });
+
+  return updated;
 }

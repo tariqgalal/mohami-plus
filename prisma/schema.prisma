@@ -130,6 +130,10 @@ model Case {
   title       String
   description String?    @db.Text
   caseType    CaseType
+  classification         String? // تصنيف القضية الرئيسي
+  lawsuitType            String? // نوع الدعوى
+  branch                 String? // الفرع
+  establishmentTxnNumber String? // رقم المعاملة في المنشأة
   court       String
   courtCity   String?
   status      CaseStatus @default(OPEN)
@@ -139,6 +143,7 @@ model Case {
   closingDate DateTime?
   result      String?
   notes       String?    @db.Text
+  archivedAt  DateTime? // تاريخ الأرشفة (null = غير مؤرشفة)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
@@ -162,6 +167,7 @@ model Case {
   @@index([tenantId])
   @@index([clientId])
   @@index([status])
+  @@index([tenantId, archivedAt])
 }
 
 model CaseLawyer {
@@ -210,6 +216,10 @@ enum CaseStatus {
   SETTLED
   CLOSED
   APPEALED
+  PENDING    // منظورة
+  DRAFT      // مسودة
+  SUSPENDED  // معلقة
+  PRE_FILING // ما قبل قيد الدعوى
 }
 
 enum Priority {

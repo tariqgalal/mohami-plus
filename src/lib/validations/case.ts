@@ -37,6 +37,10 @@ export const createCaseSchema = z.object({
   title: z.string().min(3, "عنوان القضية يجب أن يكون 3 أحرف على الأقل"),
   description: z.string().optional().nullable(),
   caseType: caseTypeEnum,
+  classification: z.string().optional().nullable(),
+  lawsuitType: z.string().optional().nullable(),
+  branch: z.string().optional().nullable(),
+  establishmentTxnNumber: z.string().optional().nullable(),
   court: z.string().min(2, "المحكمة مطلوبة"),
   courtCity: z.string().optional().nullable(),
   status: caseStatusEnum.optional(),
@@ -65,6 +69,10 @@ export const caseFiltersSchema = z.object({
   priority: priorityEnum.optional(),
   lawyerId: z.string().optional(),
   clientId: z.string().optional(),
+  archived: z
+    .union([z.boolean(), z.enum(["true", "false"])])
+    .optional()
+    .transform((v) => v === true || v === "true"),
   sortBy: z.enum(["createdAt", "updatedAt", "priority", "value"]).default("createdAt"),
   sortDir: z.enum(["asc", "desc"]).default("desc"),
   page: z.coerce.number().min(1).default(1),
