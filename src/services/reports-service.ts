@@ -24,11 +24,16 @@ export async function getDashboardOverview(tenantId: string) {
     todayMeetings,
     todayDueInvoices,
     recentActivities,
+    activePoaCount,
+    activeExecutionsCount,
+    activeConsultationsCount,
+    openServiceRequestsCount,
   ] = await Promise.all([
     prisma.case.count({
       where: {
         tenantId,
         status: { in: ["OPEN", "IN_PROGRESS", "APPEALED"] },
+        archivedAt: null,
       },
     }),
     prisma.courtSession.count({
@@ -79,6 +84,7 @@ export async function getDashboardOverview(tenantId: string) {
       orderBy: { date: "asc" },
       include: {
         case: { select: { id: true, caseNumber: true, title: true } },
+        lawyer: { select: { id: true, name: true } },
       },
     }),
     prisma.meeting.findMany({
@@ -105,6 +111,30 @@ export async function getDashboardOverview(tenantId: string) {
       include: {
         user: { select: { id: true, name: true } },
         case: { select: { id: true, caseNumber: true, title: true } },
+      },
+    }),
+    // الوكالات السارية
+    prisma.powerOfAttorney.count({
+      where: { tenantId, status: "ACTIVE" },
+    }),
+    // طلبات التنفيذ النشطة (قضايا من نوع تنفيذ وغير مؤرشفة)
+    prisma.case.count({
+      where: {
+        tenantId,
+        caseType: "EXECUTION",
+        archivedAt: null,
+        status: { notIn: ["WON", "LOST", "SETTLED", "CLOSED"] },
+      },
+    }),
+    // الاستشارات القائمة
+    prisma.consultation.count({
+      where: { tenantId, status: "ACTIVE" },
+    }),
+    // طلبات العملاء المفتوحة (غير المنتهية/المرفوضة)
+    prisma.clientServiceRequest.count({
+      where: {
+        tenantId,
+        status: { notIn: ["FINAL_APPROVAL", "REJECTED"] },
       },
     }),
   ]);
@@ -140,8 +170,13 @@ export async function getDashboardOverview(tenantId: string) {
       activeClients: activeClientsCount,
       monthRevenue: Number(monthInvoicesAgg._sum.paidAmount ?? 0),
       monthInvoiced: Number(monthInvoicesAgg._sum.totalAmount ?? 0),
+      activePoa: activePoaCount,
+      activeExecutions: activeExecutionsCount,
+      activeConsultations: activeConsultationsCount,
+      openServiceRequests: openServiceRequestsCount,
     },
     upcomingSessions,
+    todaySessions,
     recentCases,
     monthlyInvoices,
     todayTasks,

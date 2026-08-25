@@ -29,11 +29,21 @@ import { toast } from "@/store/toast-store";
 import type { CaseFiltersInput } from "@/lib/validations/case";
 
 export default function CasesPage() {
-  const [filters, setFilters] = useState<Partial<CaseFiltersInput>>({
-    page: 1,
-    limit: 20,
-    sortBy: "createdAt",
-    sortDir: "desc",
+  const [filters, setFilters] = useState<Partial<CaseFiltersInput>>(() => {
+    const base: Partial<CaseFiltersInput> = {
+      page: 1,
+      limit: 20,
+      sortBy: "createdAt",
+      sortDir: "desc",
+    };
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      const caseType = sp.get("caseType");
+      const status = sp.get("status");
+      if (caseType) base.caseType = caseType as never;
+      if (status) base.status = status as never;
+    }
+    return base;
   });
   const [confirmId, setConfirmId] = useState<string | null>(null);
 

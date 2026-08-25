@@ -11,6 +11,10 @@ import {
   AlertCircle,
   TrendingUp,
   Activity as ActivityIcon,
+  ShieldCheck,
+  Landmark,
+  MessagesSquare,
+  Headphones,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getTenantId } from "@/lib/tenant";
@@ -24,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { MonthlyRevenueChart } from "@/components/charts/monthly-revenue-chart";
 import { TodayTasksWidget } from "@/components/dashboard/today-tasks";
+import { SessionsWidget } from "@/components/dashboard/sessions-widget";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { CASE_STATUS, CASE_TYPES } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -94,6 +99,42 @@ export default async function DashboardPage() {
           iconBg="bg-emerald-50 text-emerald-600"
           href="/dashboard/finance"
         />
+        <StatCard
+          icon={ShieldCheck}
+          label="الوكالات السارية"
+          value={String(data.stats.activePoa)}
+          gradient="from-teal-500 to-teal-600"
+          ringColor="ring-teal-100"
+          iconBg="bg-teal-50 text-teal-600"
+          href="/dashboard/powers-of-attorney"
+        />
+        <StatCard
+          icon={Landmark}
+          label="طلبات التنفيذ النشطة"
+          value={String(data.stats.activeExecutions)}
+          gradient="from-orange-500 to-orange-600"
+          ringColor="ring-orange-100"
+          iconBg="bg-orange-50 text-orange-600"
+          href="/dashboard/cases?caseType=EXECUTION"
+        />
+        <StatCard
+          icon={MessagesSquare}
+          label="الاستشارات القائمة"
+          value={String(data.stats.activeConsultations)}
+          gradient="from-indigo-500 to-indigo-600"
+          ringColor="ring-indigo-100"
+          iconBg="bg-indigo-50 text-indigo-600"
+          href="/dashboard/consultations"
+        />
+        <StatCard
+          icon={Headphones}
+          label="طلبات العملاء المفتوحة"
+          value={String(data.stats.openServiceRequests)}
+          gradient="from-rose-500 to-rose-600"
+          ringColor="ring-rose-100"
+          iconBg="bg-rose-50 text-rose-600"
+          href="/dashboard/client-requests"
+        />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -147,51 +188,16 @@ export default async function DashboardPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         <Card className="card-lift">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="size-4 text-brand-600" />
-                الجلسات القادمة
-              </CardTitle>
-              <Link
-                href="/dashboard/sessions"
-                className="text-xs text-brand-600 hover:underline flex items-center gap-0.5"
-              >
-                عرض الكل
-                <ChevronLeft className="size-3" />
-              </Link>
-            </div>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Calendar className="size-4 text-brand-600" />
+              الجلسات
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {data.upcomingSessions.length === 0 ? (
-              <div className="flex items-start gap-2 rounded-md bg-slate-50 border border-slate-200 p-3 text-sm text-slate-600">
-                <AlertCircle className="size-4 shrink-0 mt-0.5" />
-                <span>لا توجد جلسات مجدولة</span>
-              </div>
-            ) : (
-              <ul className="divide-y divide-slate-100">
-                {data.upcomingSessions.map((s) => (
-                  <li key={s.id} className="py-3 flex items-start gap-3">
-                    <div className="size-10 rounded-lg bg-brand-50 text-brand-700 grid place-items-center shrink-0">
-                      <Gavel className="size-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <Link
-                        href={`/dashboard/sessions/${s.id}`}
-                        className="font-medium text-slate-900 truncate block hover:text-brand-600"
-                      >
-                        {s.case.title}
-                      </Link>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {formatDate(s.date)} · {s.time} · {s.court}
-                      </p>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {s.case.caseNumber} · {s.lawyer.name}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <SessionsWidget
+              upcoming={data.upcomingSessions}
+              today={data.todaySessions}
+            />
           </CardContent>
         </Card>
 
