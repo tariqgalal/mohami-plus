@@ -27,12 +27,24 @@ import {
   Inbox,
   Users2,
   Globe,
+  ListTodo,
+  MessagesSquare,
+  Archive,
+  BookOpen,
+  CreditCard,
 } from "lucide-react";
 
 const NAV = [
   { href: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
+  // إدارة المشاريع
   { href: "/dashboard/cases", label: "القضايا", icon: Briefcase },
   { href: "/dashboard/sessions", label: "الجلسات", icon: Gavel },
+  { href: "/dashboard/tasks", label: "المهام", icon: ListTodo },
+  { href: "/dashboard/judgments", label: "الأحكام", icon: Gavel },
+  { href: "/dashboard/consultations", label: "الاستشارات", icon: MessagesSquare },
+  { href: "/dashboard/cases?caseType=EXECUTION", label: "طلبات التنفيذ", icon: Landmark },
+  { href: "/dashboard/cases/archive", label: "أرشيف القضايا", icon: Archive },
+  // إدارة الأطراف
   { href: "/dashboard/clients", label: "سجل العملاء", icon: Users },
   { href: "/dashboard/parties/opponents", label: "سجل الخصوم", icon: Swords },
   { href: "/dashboard/client-requests", label: "طلبات خدمات العملاء", icon: Headphones },
@@ -41,6 +53,7 @@ const NAV = [
   { href: "/dashboard/transactions/incoming", label: "المعاملات — الوارد", icon: Inbox },
   { href: "/dashboard/transactions/outgoing", label: "المعاملات — الصادر", icon: Inbox },
   { href: "/dashboard/powers-of-attorney", label: "الوكالات", icon: ShieldCheck },
+  { href: "/dashboard/borrowings", label: "الاستعارات", icon: BookOpen },
   { href: "/dashboard/team", label: "الفريق", icon: UserCog },
   { href: "/dashboard/hr/leaves", label: "سجل الإجازات", icon: Users2 },
   { href: "/dashboard/hr/leave-reports", label: "تقارير إجازات الموظفين", icon: Users2 },
@@ -50,6 +63,7 @@ const NAV = [
   { href: "/dashboard/reports", label: "التقارير", icon: BarChart3 },
   { href: "/dashboard/najiz", label: "ناجز", icon: Landmark },
   { href: "/dashboard/wathiq", label: "واجهة وثائق", icon: Globe },
+  { href: "/dashboard/billing", label: "الاشتراك والفوترة", icon: CreditCard },
   { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
 ];
 

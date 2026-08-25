@@ -6,8 +6,6 @@ import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
   LayoutDashboard,
-  Briefcase,
-  Gavel,
   Users,
   UserCog,
   CalendarDays,
@@ -26,7 +24,6 @@ import {
   Globe,
   BookOpen,
   FolderKanban,
-  ListTodo,
   ChevronDown,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
@@ -49,9 +46,20 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
-  { href: "/dashboard/cases", label: "القضايا", icon: Briefcase },
-  { href: "/dashboard/sessions", label: "الجلسات", icon: Gavel },
-  { href: "/dashboard/tasks", label: "المهام", icon: ListTodo, permission: "TASK_READ" },
+  {
+    href: "/dashboard/cases",
+    label: "إدارة المشاريع",
+    icon: FolderKanban,
+    children: [
+      { href: "/dashboard/cases", label: "القضايا" },
+      { href: "/dashboard/sessions", label: "الجلسات" },
+      { href: "/dashboard/tasks", label: "المهام" },
+      { href: "/dashboard/judgments", label: "الأحكام" },
+      { href: "/dashboard/consultations", label: "الاستشارات" },
+      { href: "/dashboard/cases?caseType=EXECUTION", label: "طلبات التنفيذ" },
+      { href: "/dashboard/cases/archive", label: "الأرشيف" },
+    ],
+  },
   {
     href: "/dashboard/parties",
     label: "إدارة الأطراف",
@@ -59,16 +67,6 @@ const NAV: NavItem[] = [
     children: [
       { href: "/dashboard/clients", label: "سجل العملاء" },
       { href: "/dashboard/parties/opponents", label: "سجل الخصوم" },
-    ],
-  },
-  {
-    href: "/dashboard/consultations",
-    label: "إدارة المشاريع",
-    icon: FolderKanban,
-    permission: "CONSULTATION_READ",
-    children: [
-      { href: "/dashboard/consultations", label: "الاستشارات" },
-      { href: "/dashboard/judgments", label: "الأحكام" },
     ],
   },
   { href: "/dashboard/client-requests", label: "طلبات خدمات العملاء", icon: Headphones, permission: "SERVICE_REQUEST_READ" },
