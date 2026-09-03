@@ -23,7 +23,12 @@ import {
   useArchiveCase,
   type CaseListItem,
 } from "@/hooks/use-cases";
-import { CASE_TYPES, CASE_STATUS, PRIORITY_LABELS } from "@/lib/constants";
+import {
+  CASE_TYPES,
+  CASE_STATUS,
+  CASE_STATUS_ALL,
+  PRIORITY_LABELS,
+} from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { toast } from "@/store/toast-store";
 import type { CaseFiltersInput } from "@/lib/validations/case";
@@ -139,7 +144,8 @@ export default function CasesPage() {
               {
                 header: "الحالة",
                 accessor: (r) =>
-                  (CASE_STATUS as Record<string, string>)[r.status] ?? r.status,
+                  (CASE_STATUS_ALL as Record<string, string>)[r.status] ??
+                  r.status,
               },
               {
                 header: "تاريخ الإنشاء",

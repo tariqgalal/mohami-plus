@@ -5,7 +5,7 @@ import {
   notifyCaseAssigned,
   notifyCaseStatusChanged,
 } from "@/services/notification-service";
-import { CASE_STATUS } from "@/lib/constants";
+import { CASE_STATUS_ALL } from "@/lib/constants";
 import type {
   CreateCaseInput,
   UpdateCaseInput,
@@ -320,7 +320,8 @@ export async function updateCase(
 
   if (input.status && input.status !== existing.status) {
     const statusLabel =
-      CASE_STATUS[input.status as keyof typeof CASE_STATUS] ?? input.status;
+      CASE_STATUS_ALL[input.status as keyof typeof CASE_STATUS_ALL] ??
+      input.status;
     const notifyIds = existing.lawyers
       .map((l) => l.userId)
       .filter((uid) => uid !== userId);

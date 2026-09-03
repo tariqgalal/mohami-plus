@@ -14,7 +14,7 @@ import { hasPermission } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import { getReportsOverview } from "@/services/reports-service";
 import { getFinanceStats } from "@/services/invoice-service";
-import { CASE_STATUS, CASE_TYPES, USER_ROLES } from "@/lib/constants";
+import { CASE_STATUS_ALL, CASE_TYPES, USER_ROLES } from "@/lib/constants";
 import { formatCurrency } from "@/lib/format";
 import type { UserRole } from "@prisma/client";
 import { CasesPieChart } from "@/components/charts/cases-pie-chart";
@@ -37,7 +37,7 @@ export default async function ReportsPage() {
   );
 
   const statusData = overview.casesByStatus.map((s) => ({
-    name: CASE_STATUS[s.status as keyof typeof CASE_STATUS] ?? s.status,
+    name: CASE_STATUS_ALL[s.status as keyof typeof CASE_STATUS_ALL] ?? s.status,
     value: s._count,
   }));
 

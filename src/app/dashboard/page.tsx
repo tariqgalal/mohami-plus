@@ -30,7 +30,7 @@ import { MonthlyRevenueChart } from "@/components/charts/monthly-revenue-chart";
 import { TodayTasksWidget } from "@/components/dashboard/today-tasks";
 import { SessionsWidget } from "@/components/dashboard/sessions-widget";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
-import { CASE_STATUS, CASE_TYPES } from "@/lib/constants";
+import { CASE_STATUS_ALL, CASE_TYPES } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -246,7 +246,7 @@ export default async function DashboardPage() {
                         <Badge
                           className={`${statusColors[c.status]} ring-1 text-xs`}
                         >
-                          {CASE_STATUS[c.status as keyof typeof CASE_STATUS] ??
+                          {CASE_STATUS_ALL[c.status as keyof typeof CASE_STATUS_ALL] ??
                             c.status}
                         </Badge>
                         <span className="text-xs text-slate-400">
