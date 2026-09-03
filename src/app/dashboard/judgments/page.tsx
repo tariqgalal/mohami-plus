@@ -25,6 +25,7 @@ import {
 } from "@/hooks/use-judgments";
 import {
   OBJECTION_STATUS,
+  OBJECTION_STATUS_ALL,
   JUDGMENT_LEVEL,
   JUDGMENT_RESULT,
 } from "@/lib/constants";
@@ -32,12 +33,14 @@ import { formatHijri, formatGregorianShort } from "@/lib/hijri";
 import { toast } from "@/store/toast-store";
 import type { JudgmentFiltersInput } from "@/lib/validations/judgment";
 
+// تبويبات الأحكام = حالات الاعتراض فقط. ("ما قبل قيد الدعوى" كانت هنا
+// بالخطأ — هي حالة قضية وليست حالة اعتراض على حكم.)
 const TABS: { key: string; label: string }[] = [
   { key: "", label: "الكل" },
-  { key: "PRE_FILING", label: OBJECTION_STATUS.PRE_FILING },
   { key: "NO_OBJECTION", label: OBJECTION_STATUS.NO_OBJECTION },
   { key: "PENDING", label: OBJECTION_STATUS.PENDING },
   { key: "OBJECTED", label: OBJECTION_STATUS.OBJECTED },
+  { key: "FINAL", label: OBJECTION_STATUS.FINAL },
 ];
 
 export default function JudgmentsPage() {
@@ -128,7 +131,7 @@ export default function JudgmentsPage() {
               {
                 header: "حالة الاعتراض",
                 accessor: (r) =>
-                  (OBJECTION_STATUS as Record<string, string>)[
+                  (OBJECTION_STATUS_ALL as Record<string, string>)[
                     r.objectionStatus
                   ] ?? r.objectionStatus,
               },

@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import {
-  OBJECTION_STATUS,
+  OBJECTION_STATUS_ALL,
   JUDGMENT_RESULT,
   JUDGMENT_LEVEL,
 } from "@/lib/constants";
@@ -13,6 +13,7 @@ const OBJECTION_VARIANT: Record<
   PENDING: "warning",
   NO_OBJECTION: "success",
   OBJECTED: "default",
+  FINAL: "secondary",
 };
 
 const RESULT_VARIANT: Record<
@@ -27,7 +28,7 @@ const RESULT_VARIANT: Record<
 export function ObjectionStatusBadge({ status }: { status: string }) {
   return (
     <Badge variant={OBJECTION_VARIANT[status] ?? "secondary"}>
-      {(OBJECTION_STATUS as Record<string, string>)[status] ?? status}
+      {(OBJECTION_STATUS_ALL as Record<string, string>)[status] ?? status}
     </Badge>
   );
 }

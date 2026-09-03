@@ -281,12 +281,25 @@ export const JUDGMENT_RESULT = {
   PARTIAL: "جزئي",
 } as const;
 
-// الأحكام — حالة الاعتراض
+// الأحكام — حالة الاعتراض.
+// ملاحظة: PRE_FILING ("ما قبل قيد الدعوى") حالة قضية وليست حالة اعتراض على
+// حكم، فأُخرجت من تبويبات وخيارات الأحكام وبقيت في OBJECTION_STATUS_LEGACY
+// لعرض أي سجلات قديمة فقط.
 export const OBJECTION_STATUS = {
-  PRE_FILING: "ما قبل قيد الدعوى",
-  PENDING: "قيد المهلة",
   NO_OBJECTION: "بدون اعتراض",
+  PENDING: "قيد المهلة",
   OBJECTED: "تم الاعتراض",
+  FINAL: "مكتسب القطعية",
+} as const;
+
+/** قيم enum قديمة لم تعد تُعرض للاختيار — للعرض فقط. */
+export const OBJECTION_STATUS_LEGACY = {
+  PRE_FILING: "ما قبل قيد الدعوى",
+} as const;
+
+export const OBJECTION_STATUS_ALL = {
+  ...OBJECTION_STATUS,
+  ...OBJECTION_STATUS_LEGACY,
 } as const;
 
 // الموارد البشرية — أنواع الإجازات

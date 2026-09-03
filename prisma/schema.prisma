@@ -1101,10 +1101,11 @@ enum JudgmentResult {
 }
 
 enum ObjectionStatus {
-  PRE_FILING // ما قبل قيد الدعوى
+  PRE_FILING // (مهجورة) كانت حالة قضية لا حالة اعتراض — لم تعد تُعرض
   PENDING // قيد المهلة
   NO_OBJECTION // بدون اعتراض
   OBJECTED // تم الاعتراض
+  FINAL // مكتسب القطعية (انتهت المهلة أو رُفض الاعتراض)
 }
 
 // ============ TASKS (المهام) ============
