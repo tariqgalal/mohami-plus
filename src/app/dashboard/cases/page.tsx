@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Briefcase, Plus, Eye, Edit, Archive } from "lucide-react";
+import { Briefcase, Plus, Eye, Edit, Archive, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -65,6 +65,32 @@ export default function CasesPage() {
   const items = data?.items ?? [];
   const isEmpty = !isLoading && items.length === 0;
   const hasFilters = !!(filters.q || filters.status || filters.caseType || filters.priority);
+
+  // نوضّح للمستخدم بالضبط أي فلاتر شغّالة لما النتيجة تطلع فاضية، بدل رسالة
+  // "لا توجد نتائج" المجرّدة اللي بتبان وكأنها عطل في الفلترة.
+  const activeFilterLabels: string[] = [];
+  if (filters.q) activeFilterLabels.push(`بحث: "${filters.q}"`);
+  if (filters.status)
+    activeFilterLabels.push(
+      `الحالة: ${(CASE_STATUS as Record<string, string>)[filters.status] ?? filters.status}`,
+    );
+  if (filters.caseType)
+    activeFilterLabels.push(
+      `النوع: ${(CASE_TYPES as Record<string, string>)[filters.caseType] ?? filters.caseType}`,
+    );
+  if (filters.priority)
+    activeFilterLabels.push(
+      `الأولوية: ${(PRIORITY_LABELS as Record<string, string>)[filters.priority] ?? filters.priority}`,
+    );
+
+  function clearFilters() {
+    setFilters({
+      page: 1,
+      limit: filters.limit,
+      sortBy: filters.sortBy,
+      sortDir: filters.sortDir,
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -178,14 +204,19 @@ export default function CasesPage() {
       {isEmpty && (
         <EmptyState
           icon={Briefcase}
-          title={hasFilters ? "لا توجد نتائج" : "لا توجد قضايا بعد"}
+          title={hasFilters ? "لا توجد قضايا مطابقة" : "لا توجد قضايا بعد"}
           description={
             hasFilters
-              ? "جرّب تعديل عوامل التصفية أو البحث بكلمة أخرى"
+              ? `لا توجد قضايا تطابق (${activeFilterLabels.join("، ")}). امسح عوامل التصفية لعرض كل القضايا.`
               : "ابدأ بإضافة أول قضية لمكتبك"
           }
           action={
-            !hasFilters && (
+            hasFilters ? (
+              <Button variant="outline" onClick={clearFilters}>
+                <X className="size-4" />
+                مسح عوامل التصفية
+              </Button>
+            ) : (
               <Link href="/dashboard/cases/new">
                 <Button>
                   <Plus className="size-4" />

@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { CASE_STATUS, PRIORITY_LABELS } from "@/lib/constants";
+import { CASE_STATUS_ALL, PRIORITY_LABELS } from "@/lib/constants";
 
 const STATUS_VARIANTS: Record<
   string,
@@ -20,7 +20,7 @@ const STATUS_VARIANTS: Record<
 };
 
 export function CaseStatusBadge({ status }: { status: string }) {
-  const label = (CASE_STATUS as Record<string, string>)[status] ?? status;
+  const label = (CASE_STATUS_ALL as Record<string, string>)[status] ?? status;
   return <Badge variant={STATUS_VARIANTS[status] ?? "secondary"}>{label}</Badge>;
 }
 

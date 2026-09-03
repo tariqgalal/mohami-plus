@@ -10,14 +10,13 @@ interface CaseStatusTabsProps {
   onChange: (status: string | undefined) => void;
 }
 
-// نعرض الحالات الأساسية دائماً، وأي حالة أخرى لها قضايا
+// ترتيب عرض تبويبات الحالات. كل مفتاح هنا لازم يكون موجوداً في CASE_STATUS
+// مرة واحدة فقط — التكرار كان سبب ظهور تبويب "معلقة" مرتين.
 const PRIMARY_ORDER = [
   "OPEN",
   "IN_PROGRESS",
   "PENDING",
   "PRE_FILING",
-  "DRAFT",
-  "SUSPENDED",
   "ON_HOLD",
   "APPEALED",
   "WON",
@@ -32,9 +31,15 @@ export function CaseStatusTabs({
   total,
   onChange,
 }: CaseStatusTabsProps) {
-  const statuses = PRIMARY_ORDER.filter(
-    (k) => k in CASE_STATUS,
-  );
+  // نحذف أي مفتاح غير معرّف، وأي تسمية مكرّرة (احتياط ضد رجوع التكرار).
+  const seenLabels = new Set<string>();
+  const statuses = PRIMARY_ORDER.filter((k) => {
+    if (!(k in CASE_STATUS)) return false;
+    const label = (CASE_STATUS as Record<string, string>)[k];
+    if (seenLabels.has(label)) return false;
+    seenLabels.add(label);
+    return true;
+  });
 
   return (
     <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">

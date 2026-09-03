@@ -428,12 +428,10 @@ export function CaseForm({ initial, mode }: CaseFormProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="establishmentTxnNumber">
-                رقم المعاملة في المنشأة
-              </Label>
+              <Label htmlFor="establishmentTxnNumber">رقم المعاملة</Label>
               <Input
                 id="establishmentTxnNumber"
-                placeholder="رقم مرجعي داخلي"
+                placeholder="رقم المعاملة"
                 {...register("establishmentTxnNumber")}
               />
             </div>
@@ -453,20 +451,23 @@ export function CaseForm({ initial, mode }: CaseFormProps) {
             <div className="space-y-2">
               <Label htmlFor="filingDate">تاريخ رفع الدعوى</Label>
               <Input id="filingDate" type="date" {...register("filingDate")} />
+              {errors.filingDate && (
+                <p className="text-xs text-red-600">
+                  {errors.filingDate.message as string}
+                </p>
+              )}
             </div>
 
-            {mode === "edit" && (
-              <div className="space-y-2">
-                <Label htmlFor="status">الحالة</Label>
-                <Select id="status" {...register("status")}>
-                  {Object.entries(CASE_STATUS).map(([k, v]) => (
-                    <option key={k} value={k}>
-                      {v}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="status">حالة القضية</Label>
+              <Select id="status" {...register("status")}>
+                {Object.entries(CASE_STATUS).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {v}
+                  </option>
+                ))}
+              </Select>
+            </div>
 
             <div className="md:col-span-2 space-y-2">
               <Label htmlFor="description">وصف القضية</Label>

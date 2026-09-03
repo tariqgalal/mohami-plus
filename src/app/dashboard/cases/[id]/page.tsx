@@ -144,7 +144,7 @@ export default async function CaseDetailPage({ params }: PageProps) {
                   <KV label="مدينة المحكمة" value={item.courtCity} />
                   <KV label="الفرع" value={item.branch} />
                   <KV
-                    label="رقم المعاملة في المنشأة"
+                    label="رقم المعاملة"
                     value={item.establishmentTxnNumber}
                   />
                   <KV

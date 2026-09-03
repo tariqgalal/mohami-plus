@@ -54,19 +54,35 @@ export const CASE_TYPES = {
   OTHER: "أخرى",
 } as const;
 
+// حالات القضية المعروضة في الواجهة (تبويبات + فلاتر + النماذج).
+// ملاحظة: enum قاعدة البيانات فيه قيم قديمة (DRAFT / SUSPENDED) ما عادت
+// تُستخدم — DRAFT ("مسودة") ليست حالة قضية في السياق القضائي السعودي،
+// و SUSPENDED كانت تكراراً حرفياً لـ ON_HOLD ("معلقة") فكانت تظهر مرتين.
+// لذلك أُخرجتا من القائمة المعروضة وبقيتا في CASE_STATUS_LEGACY لعرض أي
+// سجلات قديمة محفوظة بهما دون كسر الشارات.
 export const CASE_STATUS = {
   OPEN: "مفتوحة",
   IN_PROGRESS: "جارية",
   PENDING: "منظورة",
   PRE_FILING: "ما قبل قيد الدعوى",
-  DRAFT: "مسودة",
   ON_HOLD: "معلقة",
-  SUSPENDED: "معلقة",
   APPEALED: "مستأنفة",
   WON: "مكسوبة",
   LOST: "خاسرة",
   SETTLED: "تسوية",
   CLOSED: "مغلقة",
+} as const;
+
+/** قيم enum قديمة لم تعد تُعرض للاختيار — للعرض فقط عند وجود سجلات قديمة. */
+export const CASE_STATUS_LEGACY = {
+  DRAFT: "مسودة",
+  SUSPENDED: "معلقة",
+} as const;
+
+/** كل التسميات (الحالية + القديمة) — استخدمها عند عرض حالة سجل محفوظ. */
+export const CASE_STATUS_ALL = {
+  ...CASE_STATUS,
+  ...CASE_STATUS_LEGACY,
 } as const;
 
 export const PRIORITY_LABELS = {

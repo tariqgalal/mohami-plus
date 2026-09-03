@@ -12,6 +12,38 @@ const priorityEnum = z.enum(
   Object.values(Priority) as [Priority, ...Priority[]],
 );
 
+/**
+ * حقول input[type=date] و input[type=number] الفاضية بترجع "" من المتصفح.
+ * z.coerce.date() بيحوّل "" لـ Invalid Date فيفشل التحقق بصمت (الويزارد
+ * كان بيرفض ينتقل للخطوة التالية بدون ما يظهر سبب)، و z.coerce.number()
+ * بيحوّل "" لـ 0 فيتحفظ مبلغ صفر بدل ما يفضل فاضي. الـ helpers دي بتعامل
+ * السلسلة الفاضية كـ null قبل التحويل، وبتثبّت التاريخ على منتصف نهار UTC
+ * علشان ما يحصلش انزياح يوم باختلاف المنطقة الزمنية للمستخدم.
+ */
+const optionalDate = z.preprocess((v) => {
+  if (v === "" || v === null || v === undefined) return null;
+  if (typeof v === "string") {
+    const ymd = v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (ymd) {
+      return new Date(
+        Date.UTC(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]), 12),
+      );
+    }
+  }
+  return v;
+}, z.coerce.date().nullable().optional());
+
+/** نص اختياري: يحوّل السلسلة الفاضية إلى null بدل تخزين "" في قاعدة البيانات. */
+const optionalText = z.preprocess(
+  (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+  z.string().nullable().optional(),
+);
+
+const optionalNumber = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? null : v),
+  z.coerce.number().nonnegative().nullable().optional(),
+);
+
 export const opponentSchema = z.object({
   name: z.string().min(2, "اسم الخصم مطلوب"),
   type: z.string().optional().nullable(),
@@ -35,19 +67,19 @@ export const attachmentSchema = z.object({
 
 export const createCaseSchema = z.object({
   title: z.string().min(3, "عنوان القضية يجب أن يكون 3 أحرف على الأقل"),
-  description: z.string().optional().nullable(),
+  description: optionalText,
   caseType: caseTypeEnum,
-  classification: z.string().optional().nullable(),
-  lawsuitType: z.string().optional().nullable(),
-  branch: z.string().optional().nullable(),
-  establishmentTxnNumber: z.string().optional().nullable(),
+  classification: optionalText,
+  lawsuitType: optionalText,
+  branch: optionalText,
+  establishmentTxnNumber: optionalText,
   court: z.string().min(2, "المحكمة مطلوبة"),
-  courtCity: z.string().optional().nullable(),
+  courtCity: optionalText,
   status: caseStatusEnum.optional(),
   priority: priorityEnum.optional(),
-  value: z.coerce.number().nonnegative().optional().nullable(),
-  filingDate: z.coerce.date().optional().nullable(),
-  notes: z.string().optional().nullable(),
+  value: optionalNumber,
+  filingDate: optionalDate,
+  notes: optionalText,
 
   clientId: z.string().min(1, "العميل مطلوب"),
   primaryLawyerId: z.string().min(1, "المحامي المسؤول مطلوب"),
@@ -58,8 +90,8 @@ export const createCaseSchema = z.object({
 });
 
 export const updateCaseSchema = createCaseSchema.partial().extend({
-  closingDate: z.coerce.date().optional().nullable(),
-  result: z.string().optional().nullable(),
+  closingDate: optionalDate,
+  result: optionalText,
 });
 
 export const caseFiltersSchema = z.object({
