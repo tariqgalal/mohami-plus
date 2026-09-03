@@ -5,6 +5,7 @@ import type {
   UpdateDocumentInput,
   DocumentFiltersInput,
 } from "@/lib/validations/document";
+import { AppError, NotFoundError } from "@/lib/errors";
 
 export async function listDocuments(
   tenantId: string,
@@ -69,7 +70,7 @@ export async function createDocument(
       where: { id: input.caseId, tenantId },
       select: { id: true },
     });
-    if (!c) throw new Error("القضية غير موجودة");
+    if (!c) throw new NotFoundError("القضية غير موجودة");
   }
 
   return prisma.$transaction(async (tx) => {
@@ -140,5 +141,5 @@ export async function deleteDocument(
   _userId: string,
   _id: string,
 ) {
-  throw new Error("الحذف النهائي للمستندات غير مدعوم");
+  throw new AppError("الحذف النهائي للمستندات غير مدعوم");
 }

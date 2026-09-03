@@ -5,6 +5,7 @@ import type {
   UpdateJudgmentInput,
   JudgmentFiltersInput,
 } from "@/lib/validations/judgment";
+import { NotFoundError } from "@/lib/errors";
 
 export async function listJudgments(
   tenantId: string,
@@ -67,7 +68,7 @@ async function resolveCase(tenantId: string, caseId: string) {
     where: { id: caseId, tenantId },
     select: { caseNumber: true, title: true },
   });
-  if (!c) throw new Error("القضية غير موجودة");
+  if (!c) throw new NotFoundError("القضية غير موجودة");
   return c;
 }
 

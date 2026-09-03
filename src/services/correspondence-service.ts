@@ -5,6 +5,7 @@ import type {
   UpdateCorrespondenceInput,
   CorrespondenceFiltersInput,
 } from "@/lib/validations/correspondence";
+import { NotFoundError } from "@/lib/errors";
 
 export interface ViewedByEntry {
   id: string;
@@ -117,7 +118,7 @@ export async function createCorrespondence(
     where: { id: userId, tenantId },
     select: { name: true },
   });
-  if (!sender) throw new Error("المرسل غير موجود");
+  if (!sender) throw new NotFoundError("المرسل غير موجود");
 
   // في حالة الرد: تأكد أن المراسلة الأصلية تخص نفس المكتب وورّث النوع والقسم
   let type = input.type;
@@ -127,7 +128,7 @@ export async function createCorrespondence(
       where: { id: input.parentId, tenantId },
       select: { id: true, type: true, category: true },
     });
-    if (!parent) throw new Error("المراسلة الأصلية غير موجودة");
+    if (!parent) throw new NotFoundError("المراسلة الأصلية غير موجودة");
     type = parent.type;
     category = parent.category;
   }

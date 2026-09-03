@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Upload, FileText, Image as ImageIcon, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/store/toast-store";
+import { apiErrorMessage } from "@/lib/api-error-message";
 
 export interface UploadedFileInfo {
   url: string;
@@ -46,8 +47,22 @@ export function FileUpload({
   const [uploading, setUploading] = useState(false);
 
   async function handleFile(file: File) {
+    if (file.size === 0) {
+      toast.error("الملف فارغ");
+      return;
+    }
     if (file.size > 10 * 1024 * 1024) {
       toast.error("حجم الملف يتجاوز 10 ميجابايت");
+      return;
+    }
+    // فحص مبكر للامتداد حتى لا ينتظر المستخدم رفعاً سيفشل على السيرفر
+    const ext = (file.name.split(".").pop() ?? "").toLowerCase();
+    const allowed = accept
+      .split(",")
+      .map((a) => a.trim().replace(/^\./, "").toLowerCase())
+      .filter(Boolean);
+    if (allowed.length && !allowed.includes(ext)) {
+      toast.error(`نوع الملف غير مدعوم. المسموح: ${allowed.join("، ")}`);
       return;
     }
     setUploading(true);
@@ -57,7 +72,7 @@ export function FileUpload({
       const res = await fetch("/api/upload", { method: "POST", body: form });
       const json = await res.json();
       if (!res.ok || !json.success) {
-        throw new Error(json.error || "فشل رفع الملف");
+        throw new Error(apiErrorMessage(json));
       }
       onChange(json.data as UploadedFileInfo);
       toast.success("تم رفع الملف");

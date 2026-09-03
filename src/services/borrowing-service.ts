@@ -5,6 +5,7 @@ import type {
   UpdateBorrowingInput,
   BorrowingFiltersInput,
 } from "@/lib/validations/borrowing";
+import { NotFoundError } from "@/lib/errors";
 
 export async function listBorrowings(
   tenantId: string,
@@ -70,7 +71,7 @@ async function resolveEmployeeName(
     where: { id: employeeId, tenantId },
     select: { name: true },
   });
-  if (!user) throw new Error("الموظف غير موجود");
+  if (!user) throw new NotFoundError("الموظف غير موجود");
   return user.name;
 }
 

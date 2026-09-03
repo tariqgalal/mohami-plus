@@ -5,6 +5,7 @@ import type {
   UpdateServiceRequestInput,
   ServiceRequestFiltersInput,
 } from "@/lib/validations/client-service-request";
+import { NotFoundError } from "@/lib/errors";
 
 /** يربط معرّفات المكلَّفين بأسمائهم (ضمن نفس المكتب) لعرضها في القوائم */
 async function attachAssignees<T extends { assignedTo: string | null }>(
@@ -101,7 +102,7 @@ export async function createServiceRequest(
       where: { id: assignedTo, tenantId },
       select: { id: true },
     });
-    if (!assignee) throw new Error("الموظف المكلَّف غير موجود");
+    if (!assignee) throw new NotFoundError("الموظف المكلَّف غير موجود");
   }
 
   return prisma.$transaction(async (tx) => {
@@ -155,7 +156,7 @@ export async function updateServiceRequest(
       where: { id: input.assignedTo, tenantId },
       select: { id: true },
     });
-    if (!assignee) throw new Error("الموظف المكلَّف غير موجود");
+    if (!assignee) throw new NotFoundError("الموظف المكلَّف غير موجود");
   }
 
   return prisma.$transaction(async (tx) => {

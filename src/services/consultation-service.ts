@@ -5,6 +5,7 @@ import type {
   UpdateConsultationInput,
   ConsultationFiltersInput,
 } from "@/lib/validations/consultation";
+import { NotFoundError } from "@/lib/errors";
 
 export async function listConsultations(
   tenantId: string,
@@ -71,7 +72,7 @@ async function resolveClientName(
     where: { id: clientId, tenantId },
     select: { name: true },
   });
-  if (!client) throw new Error("العميل غير موجود");
+  if (!client) throw new NotFoundError("العميل غير موجود");
   return client.name;
 }
 

@@ -8,6 +8,7 @@ import type {
   SessionFiltersInput,
   RecordResultInput,
 } from "@/lib/validations/session";
+import { NotFoundError } from "@/lib/errors";
 
 export async function listSessions(
   tenantId: string,
@@ -108,7 +109,7 @@ export async function createSession(
     where: { id: input.caseId, tenantId },
     select: { id: true },
   });
-  if (!caseExists) throw new Error("القضية غير موجودة");
+  if (!caseExists) throw new NotFoundError("القضية غير موجودة");
 
   const created = await prisma.$transaction(async (tx) => {
     const session = await tx.courtSession.create({

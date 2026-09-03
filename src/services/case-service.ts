@@ -11,6 +11,7 @@ import type {
   UpdateCaseInput,
   CaseFiltersInput,
 } from "@/lib/validations/case";
+import { AppError } from "@/lib/errors";
 
 export async function listCases(tenantId: string, filters: CaseFiltersInput) {
   const where: Prisma.CaseWhereInput = { tenantId };
@@ -334,7 +335,7 @@ export async function deleteCase(
   _userId: string,
   _id: string,
 ) {
-  throw new Error("الحذف النهائي للقضايا غير مدعوم");
+  throw new AppError("الحذف النهائي للقضايا غير مدعوم");
 }
 
 /** عدد القضايا (غير المؤرشفة) حسب كل حالة — للتابات */

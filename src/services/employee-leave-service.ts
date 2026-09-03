@@ -5,6 +5,7 @@ import type {
   UpdateEmployeeLeaveInput,
   EmployeeLeaveFiltersInput,
 } from "@/lib/validations/employee-leave";
+import { NotFoundError } from "@/lib/errors";
 
 /** عدد الأيام شاملاً يومي البداية والنهاية */
 function daysBetween(start: Date, end: Date): number {
@@ -75,7 +76,7 @@ async function resolveEmployeeName(
     where: { id: employeeId, tenantId },
     select: { name: true },
   });
-  if (!user) throw new Error("الموظف غير موجود");
+  if (!user) throw new NotFoundError("الموظف غير موجود");
   return user.name;
 }
 

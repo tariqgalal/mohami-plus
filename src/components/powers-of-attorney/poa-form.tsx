@@ -203,9 +203,9 @@ export function PoaForm({ initial, mode }: PoaFormProps) {
                 />
               )}
             />
-            {errors.startDate && (
+            {(errors.startDate || errors.startDateHijri) && (
               <p className="text-xs text-red-600">
-                {errors.startDate.message}
+                {errors.startDate?.message ?? errors.startDateHijri?.message}
               </p>
             )}
           </div>
@@ -225,8 +225,10 @@ export function PoaForm({ initial, mode }: PoaFormProps) {
                 />
               )}
             />
-            {errors.endDate && (
-              <p className="text-xs text-red-600">{errors.endDate.message}</p>
+            {(errors.endDate || errors.endDateHijri) && (
+              <p className="text-xs text-red-600">
+                {errors.endDate?.message ?? errors.endDateHijri?.message}
+              </p>
             )}
           </div>
 
@@ -399,10 +401,22 @@ export function PoaForm({ initial, mode }: PoaFormProps) {
         </CardContent>
       </Card>
 
+      {/* ملخص الأخطاء: نسرد الرسائل الفعلية بدل "راجع الحقول المظللة"، لأن
+          بعض الحقول (مثل التاريخ الهجري) تُملأ ضمنياً من مُدخل التاريخ ولا
+          يظهر لها تظليل، فكان النموذج يرفض الحفظ بلا سبب واضح. */}
       {Object.keys(errors).length > 0 && (
-        <div className="flex items-center gap-2 rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
-          <AlertCircle className="size-4 shrink-0" />
-          <span>راجع الحقول المظللة بالأحمر</span>
+        <div className="rounded-md bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+          <div className="flex items-center gap-2 font-medium">
+            <AlertCircle className="size-4 shrink-0" />
+            <span>تعذّر الحفظ — راجع الحقول التالية:</span>
+          </div>
+          <ul className="mt-1 list-disc space-y-0.5 pe-6 text-xs">
+            {Object.entries(errors).map(([field, err]) => (
+              <li key={field}>
+                {(err as { message?: string })?.message ?? "قيمة غير صحيحة"}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

@@ -3,6 +3,7 @@ import type {
   AttachmentFilter,
   CreateLinkAttachmentInput,
 } from "@/lib/validations/attachment";
+import { AppError, NotFoundError } from "@/lib/errors";
 
 const OWNER_FIELDS = [
   "caseId",
@@ -15,7 +16,7 @@ const OWNER_FIELDS = [
 function validateOwner(filter: AttachmentFilter): void {
   const set = OWNER_FIELDS.filter((f) => filter[f]);
   if (set.length !== 1) {
-    throw new Error("لا بد من تحديد مالك واحد بالضبط (قضية أو عميل أو ...)");
+    throw new AppError("لا بد من تحديد مالك واحد بالضبط (قضية أو عميل أو ...)");
   }
 }
 
@@ -28,35 +29,35 @@ async function assertOwnerBelongsToTenant(
       where: { id: filter.caseId, tenantId },
       select: { id: true },
     });
-    if (!c) throw new Error("القضية غير موجودة");
+    if (!c) throw new NotFoundError("القضية غير موجودة");
   }
   if (filter.clientId) {
     const c = await prisma.client.findFirst({
       where: { id: filter.clientId, tenantId },
       select: { id: true },
     });
-    if (!c) throw new Error("العميل غير موجود");
+    if (!c) throw new NotFoundError("العميل غير موجود");
   }
   if (filter.invoiceId) {
     const c = await prisma.invoice.findFirst({
       where: { id: filter.invoiceId, tenantId },
       select: { id: true },
     });
-    if (!c) throw new Error("الفاتورة غير موجودة");
+    if (!c) throw new NotFoundError("الفاتورة غير موجودة");
   }
   if (filter.sessionId) {
     const c = await prisma.courtSession.findFirst({
       where: { id: filter.sessionId, tenantId },
       select: { id: true },
     });
-    if (!c) throw new Error("الجلسة غير موجودة");
+    if (!c) throw new NotFoundError("الجلسة غير موجودة");
   }
   if (filter.meetingId) {
     const c = await prisma.meeting.findFirst({
       where: { id: filter.meetingId, tenantId },
       select: { id: true },
     });
-    if (!c) throw new Error("الاجتماع غير موجود");
+    if (!c) throw new NotFoundError("الاجتماع غير موجود");
   }
 }
 
@@ -104,5 +105,5 @@ export async function createLinkAttachment(
 export async function deleteAttachment(tenantId: string, id: string) {
   void tenantId;
   void id;
-  throw new Error("الحذف النهائي للمرفقات غير مدعوم");
+  throw new AppError("الحذف النهائي للمرفقات غير مدعوم");
 }

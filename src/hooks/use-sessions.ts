@@ -12,6 +12,7 @@ import type {
   SessionFiltersInput,
   UpdateSessionInput,
 } from "@/lib/validations/session";
+import { apiErrorMessage } from "@/lib/api-error-message";
 
 interface ApiResult<T> {
   success: boolean;
@@ -25,7 +26,7 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   const json: ApiResult<T> = await res.json();
-  if (!res.ok || !json.success) throw new Error(json.error || "حدث خطأ");
+  if (!res.ok || !json.success) throw new Error(apiErrorMessage(json));
   return json.data;
 }
 

@@ -3,6 +3,7 @@ import { ZodError } from "zod";
 import { Prisma } from "@prisma/client";
 import { UnauthorizedError, ForbiddenError } from "@/lib/tenant";
 import { PlanLimitError } from "@/lib/plan-limits";
+import { AppError } from "@/lib/errors";
 
 function safeStringify(value: unknown): string {
   return JSON.stringify(value, (_key, val) => {
@@ -41,6 +42,12 @@ export function handleApiError(error: unknown) {
 
   if (error instanceof PlanLimitError) {
     return apiError(error.message, error.status);
+  }
+
+  // أخطاء تطبيقية برسالة عربية جاهزة — نمرّرها للمستخدم كما هي بدل ما
+  // تتحوّل لـ "حدث خطأ غير متوقع".
+  if (error instanceof AppError) {
+    return apiError(error.message, error.status, error.details);
   }
 
   if (error instanceof ZodError) {

@@ -8,6 +8,7 @@ import type {
   InvoiceFiltersInput,
   RecordPaymentInput,
 } from "@/lib/validations/invoice";
+import { AppError, NotFoundError } from "@/lib/errors";
 
 function computeAmounts(amount: number, taxIncluded: boolean) {
   if (taxIncluded) {
@@ -107,14 +108,14 @@ export async function createInvoice(
     where: { id: input.clientId, tenantId },
     select: { id: true },
   });
-  if (!client) throw new Error("العميل غير موجود");
+  if (!client) throw new NotFoundError("العميل غير موجود");
 
   if (input.caseId) {
     const c = await prisma.case.findFirst({
       where: { id: input.caseId, tenantId },
       select: { id: true },
     });
-    if (!c) throw new Error("القضية غير موجودة");
+    if (!c) throw new NotFoundError("القضية غير موجودة");
   }
 
   const { amount, tax, totalAmount } = computeAmounts(
@@ -191,7 +192,7 @@ export async function updateInvoice(
       where: { id: input.clientId, tenantId },
       select: { id: true },
     });
-    if (!client) throw new Error("العميل غير موجود");
+    if (!client) throw new NotFoundError("العميل غير موجود");
     data.client = { connect: { id: input.clientId } };
   }
 
@@ -201,7 +202,7 @@ export async function updateInvoice(
         where: { id: input.caseId, tenantId },
         select: { id: true },
       });
-      if (!c) throw new Error("القضية غير موجودة");
+      if (!c) throw new NotFoundError("القضية غير موجودة");
       data.case = { connect: { id: input.caseId } };
     } else {
       data.case = { disconnect: true };
@@ -234,7 +235,7 @@ export async function deleteInvoice(
   });
   if (!existing) return null;
   if (Number(existing.paidAmount) > 0) {
-    throw new Error("لا يمكن إلغاء فاتورة بها مدفوعات");
+    throw new AppError("لا يمكن إلغاء فاتورة بها مدفوعات");
   }
 
   await prisma.$transaction([
@@ -268,7 +269,7 @@ export async function recordPayment(
   const newPaid = +(currentPaid + input.amount).toFixed(2);
 
   if (newPaid > totalDue + 0.01) {
-    throw new Error("المبلغ المدفوع يتجاوز إجمالي الفاتورة");
+    throw new AppError("المبلغ المدفوع يتجاوز إجمالي الفاتورة");
   }
 
   const newStatus =

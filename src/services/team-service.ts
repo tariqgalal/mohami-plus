@@ -6,6 +6,7 @@ import type {
   UpdateTeamMemberInput,
   TeamFiltersInput,
 } from "@/lib/validations/team";
+import { AppError } from "@/lib/errors";
 
 export async function listTeam(tenantId: string, filters: TeamFiltersInput) {
   const where: Prisma.UserWhereInput = { tenantId };
@@ -113,7 +114,7 @@ export async function createTeamMember(
     where: { email: input.email },
   });
   if (existing) {
-    throw new Error("هذا البريد الإلكتروني مسجل مسبقاً");
+    throw new AppError("هذا البريد الإلكتروني مسجل مسبقاً");
   }
 
   const hashed = await bcrypt.hash(input.password, 10);
@@ -231,7 +232,7 @@ export async function deleteTeamMember(
   id: string,
 ) {
   if (id === currentUserId) {
-    throw new Error("لا يمكنك حذف حسابك الخاص");
+    throw new AppError("لا يمكنك حذف حسابك الخاص");
   }
   const existing = await prisma.user.findFirst({
     where: { id, tenantId },

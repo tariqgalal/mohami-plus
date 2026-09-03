@@ -5,6 +5,7 @@ import type {
   UpdatePowerOfAttorneyInput,
   PowerOfAttorneyFiltersInput,
 } from "@/lib/validations/power-of-attorney";
+import { NotFoundError } from "@/lib/errors";
 
 export async function listPowersOfAttorney(
   tenantId: string,
@@ -129,7 +130,7 @@ export async function createPowerOfAttorney(
     where: { id: input.clientId, tenantId },
     select: { id: true },
   });
-  if (!client) throw new Error("العميل غير موجود");
+  if (!client) throw new NotFoundError("العميل غير موجود");
 
   const created = await prisma.$transaction(async (tx) => {
     const poa = await tx.powerOfAttorney.create({
@@ -190,7 +191,7 @@ export async function updatePowerOfAttorney(
       where: { id: input.clientId, tenantId },
       select: { id: true },
     });
-    if (!client) throw new Error("العميل غير موجود");
+    if (!client) throw new NotFoundError("العميل غير موجود");
   }
 
   const updated = await prisma.$transaction(async (tx) => {

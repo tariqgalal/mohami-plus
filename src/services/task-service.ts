@@ -8,6 +8,7 @@ import type {
   CreateTaskTemplateInput,
   UpdateTaskTemplateInput,
 } from "@/lib/validations/task";
+import { NotFoundError } from "@/lib/errors";
 
 interface Assignee {
   id: string;
@@ -83,7 +84,7 @@ async function resolveClientName(
     where: { id: clientId, tenantId },
     select: { name: true },
   });
-  if (!client) throw new Error("العميل غير موجود");
+  if (!client) throw new NotFoundError("العميل غير موجود");
   return client.name;
 }
 

@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "node:crypto";
+import { ServiceUnavailableError } from "@/lib/errors";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -13,8 +14,9 @@ let cachedClient: ReturnType<typeof createClient> | null = null;
 
 function getClient() {
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    throw new Error(
-      "تخزين الملفات غير مهيّأ — ضع NEXT_PUBLIC_SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY في متغيرات البيئة",
+    throw new ServiceUnavailableError(
+      "خدمة تخزين الملفات غير مهيّأة. تواصل مع مسؤول النظام.",
+      "missing NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY",
     );
   }
   if (!cachedClient) {
@@ -27,6 +29,37 @@ function getClient() {
 
 export function isStorageConfigured(): boolean {
   return Boolean(SUPABASE_URL && SERVICE_ROLE_KEY);
+}
+
+/**
+ * يحوّل خطأ Supabase Storage إلى خطأ برسالة عربية مفهومة.
+ *
+ * أهم حالة: لو الـ bucket نفسه مش متعمل في مشروع Supabase، الرد بيكون
+ * "Bucket not found" وكان بيتحوّل لـ "حدث خطأ غير متوقع" عند المستخدم —
+ * وهو سبب فشل رفع كل الملفات والصور في النظام. دلوقتي بتظهر رسالة
+ * تقول المطلوب بالضبط.
+ */
+function storageError(prefix: string, providerMessage?: string): ServiceUnavailableError {
+  const raw = providerMessage ?? "";
+  if (/bucket not found|does not exist/i.test(raw)) {
+    return new ServiceUnavailableError(
+      `خدمة تخزين الملفات غير مهيّأة (مساحة التخزين "${STORAGE_BUCKET}" غير موجودة). تواصل مع مسؤول النظام.`,
+      raw,
+    );
+  }
+  if (/exceeded the maximum allowed size|payload too large/i.test(raw)) {
+    return new ServiceUnavailableError("حجم الملف يتجاوز الحد المسموح به.", raw);
+  }
+  if (/mime type .* is not supported|invalid mime/i.test(raw)) {
+    return new ServiceUnavailableError("نوع الملف غير مدعوم.", raw);
+  }
+  if (/already exists|duplicate/i.test(raw)) {
+    return new ServiceUnavailableError("يوجد ملف بنفس الاسم بالفعل.", raw);
+  }
+  return new ServiceUnavailableError(
+    `${prefix}. حاول مرة أخرى أو تواصل مع مسؤول النظام.`,
+    raw,
+  );
 }
 
 export type StorageModule =
@@ -84,13 +117,13 @@ export async function uploadFile(opts: {
       contentType: opts.file.type || undefined,
       upsert: false,
     });
-  if (error) throw new Error(`فشل رفع الملف: ${error.message}`);
+  if (error) throw storageError("فشل رفع الملف", error.message);
 
   const { data, error: urlError } = await supabase.storage
     .from(STORAGE_BUCKET)
     .createSignedUrl(path, DEFAULT_SIGNED_URL_TTL_SEC);
   if (urlError || !data?.signedUrl) {
-    throw new Error(`فشل توليد رابط الملف: ${urlError?.message ?? "unknown"}`);
+    throw storageError("فشل توليد رابط الملف", urlError?.message);
   }
 
   return {
@@ -111,7 +144,7 @@ export async function getFileUrl(
     .from(STORAGE_BUCKET)
     .createSignedUrl(path, ttlSeconds);
   if (error || !data?.signedUrl) {
-    throw new Error(`فشل توليد رابط الملف: ${error?.message ?? "unknown"}`);
+    throw storageError("فشل توليد رابط الملف", error?.message);
   }
   return data.signedUrl;
 }
@@ -121,7 +154,7 @@ export async function deleteFile(path: string): Promise<void> {
   const { error } = await supabase.storage
     .from(STORAGE_BUCKET)
     .remove([path]);
-  if (error) throw new Error(`فشل حذف الملف: ${error.message}`);
+  if (error) throw storageError("فشل حذف الملف", error.message);
 }
 
 /** إجمالي حجم ملفات المكتب بالبايت — للتحقق من حدود الباقة. */
