@@ -164,7 +164,7 @@ export function JudgmentForm({ initial, mode }: JudgmentFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>تاريخ استلام الحكم (هجري)</Label>
+            <Label>تاريخ استلام الحكم</Label>
             <Controller
               control={control}
               name="receiveDate"
@@ -192,7 +192,7 @@ export function JudgmentForm({ initial, mode }: JudgmentFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>آخر موعد للاعتراض (هجري)</Label>
+            <Label>آخر موعد للاعتراض</Label>
             <Controller
               control={control}
               name="objectionDeadline"

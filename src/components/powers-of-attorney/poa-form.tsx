@@ -189,7 +189,7 @@ export function PoaForm({ initial, mode }: PoaFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>تاريخ البداية (هجري) *</Label>
+            <Label>تاريخ البداية *</Label>
             <Controller
               control={control}
               name="startDate"
@@ -211,7 +211,7 @@ export function PoaForm({ initial, mode }: PoaFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>تاريخ الانتهاء (هجري) *</Label>
+            <Label>تاريخ الانتهاء *</Label>
             <Controller
               control={control}
               name="endDate"

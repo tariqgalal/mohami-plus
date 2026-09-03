@@ -120,7 +120,7 @@ export default function LeaveReportsPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>من (هجري)</Label>
+            <Label>من</Label>
             <HijriDatePicker
               value={draft.from || null}
               onChange={(v) =>
@@ -130,7 +130,7 @@ export default function LeaveReportsPage() {
           </div>
 
           <div className="space-y-2">
-            <Label>إلى (هجري)</Label>
+            <Label>إلى</Label>
             <HijriDatePicker
               value={draft.to || null}
               onChange={(v) => setDraft((d) => ({ ...d, to: v.gregorian ?? "" }))}

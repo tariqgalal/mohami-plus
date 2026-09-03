@@ -172,7 +172,7 @@ export function TransactionForm({
           </div>
 
           <div className="space-y-2">
-            <Label>{isIncoming ? "تاريخ الاستلام (هجري)" : "تاريخ الإرسال (هجري)"}</Label>
+            <Label>{isIncoming ? "تاريخ الاستلام" : "تاريخ الإرسال"}</Label>
             <Controller
               control={control}
               name="date"

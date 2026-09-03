@@ -171,7 +171,7 @@ export function ConsultationForm({ initial, mode }: ConsultationFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>تاريخ الاستشارة (هجري) *</Label>
+            <Label>تاريخ الاستشارة *</Label>
             <Controller
               control={control}
               name="date"

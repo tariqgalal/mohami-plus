@@ -285,7 +285,7 @@ export function TaskForm({ initial, mode }: TaskFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>تاريخ الاستحقاق (هجري)</Label>
+            <Label>تاريخ الاستحقاق</Label>
             <Controller
               control={control}
               name="dueDate"

@@ -162,7 +162,7 @@ export function EmployeeLeaveForm({ initial, mode }: EmployeeLeaveFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>من (هجري) *</Label>
+            <Label>من *</Label>
             <Controller
               control={control}
               name="startDate"
@@ -182,7 +182,7 @@ export function EmployeeLeaveForm({ initial, mode }: EmployeeLeaveFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>إلى (هجري) *</Label>
+            <Label>إلى *</Label>
             <Controller
               control={control}
               name="endDate"

@@ -179,7 +179,7 @@ export function BorrowingForm({ initial, mode }: BorrowingFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>تاريخ الاستعارة (هجري) *</Label>
+            <Label>تاريخ الاستعارة *</Label>
             <Controller
               control={control}
               name="borrowDate"
@@ -196,7 +196,7 @@ export function BorrowingForm({ initial, mode }: BorrowingFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>تاريخ الإرجاع (هجري)</Label>
+            <Label>تاريخ الإرجاع</Label>
             <Controller
               control={control}
               name="returnDate"
