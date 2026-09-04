@@ -9,6 +9,7 @@ import type {
   RecordPaymentInput,
 } from "@/lib/validations/invoice";
 import { AppError, NotFoundError } from "@/lib/errors";
+import { notifyInvoiceCreated } from "@/services/notification-service";
 
 function computeAmounts(amount: number, taxIncluded: boolean) {
   if (taxIncluded) {
@@ -106,7 +107,7 @@ export async function createInvoice(
 ) {
   const client = await prisma.client.findFirst({
     where: { id: input.clientId, tenantId },
-    select: { id: true },
+    select: { id: true, name: true },
   });
   if (!client) throw new NotFoundError("العميل غير موجود");
 
@@ -124,7 +125,7 @@ export async function createInvoice(
   );
   const invoiceNumber = await nextInvoiceNumber(tenantId);
 
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     const created = await tx.invoice.create({
       data: {
         tenantId,
@@ -156,6 +157,25 @@ export async function createInvoice(
     });
     return created;
   });
+
+  // إشعار مديري المكتب بالفاتورة الجديدة (ما عدا من أنشأها)
+  const admins = await prisma.user.findMany({
+    where: { tenantId, role: "FIRM_ADMIN", isActive: true },
+    select: { id: true },
+  });
+  const recipients = admins.map((a) => a.id).filter((uid) => uid !== userId);
+  if (recipients.length) {
+    await notifyInvoiceCreated({
+      tenantId,
+      invoiceId: created.id,
+      invoiceNumber,
+      amount: totalAmount,
+      clientName: client.name,
+      recipientIds: recipients,
+    });
+  }
+
+  return created;
 }
 
 export async function updateInvoice(

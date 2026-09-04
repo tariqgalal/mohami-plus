@@ -6,6 +6,7 @@ import type {
   CorrespondenceFiltersInput,
 } from "@/lib/validations/correspondence";
 import { NotFoundError } from "@/lib/errors";
+import { notifyMessageReceived } from "@/services/notification-service";
 
 export interface ViewedByEntry {
   id: string;
@@ -140,7 +141,7 @@ export async function createCorrespondence(
   );
   const attachments = input.attachments ?? [];
 
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     // رقم مسلسل تلقائي متسلسل لكل مكتب
     const agg = await tx.correspondence.aggregate({
       where: { tenantId },
@@ -185,6 +186,26 @@ export async function createCorrespondence(
 
     return created;
   });
+
+  // مراسلات الموظفين فقط لها مستلمون من مستخدمي النظام
+  if (type === "EMPLOYEE") {
+    const recipients = [...new Set(input.recipientIds)].filter(
+      (rid) => rid && rid !== userId,
+    );
+    if (recipients.length) {
+      await notifyMessageReceived({
+        tenantId,
+        correspondenceId: created.id,
+        senderName: sender.name,
+        preview: created.subject
+          ? `${created.subject} — ${created.body}`
+          : created.body,
+        recipientIds: recipients,
+      });
+    }
+  }
+
+  return created;
 }
 
 /** يسجّل مشاهدة المستخدم للمراسلة (مرة واحدة) */

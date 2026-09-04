@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import { Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useUnreadCount } from "@/hooks/use-unread-count";
 import { APP_NAME } from "@/lib/constants";
 import {
   LayoutDashboard,
@@ -32,10 +33,12 @@ import {
   Archive,
   BookOpen,
   CreditCard,
+  Bell,
 } from "lucide-react";
 
 const NAV = [
   { href: "/dashboard", label: "الرئيسية", icon: LayoutDashboard },
+  { href: "/dashboard/notifications", label: "الإشعارات", icon: Bell },
   // إدارة المشاريع
   { href: "/dashboard/cases", label: "القضايا", icon: Briefcase },
   { href: "/dashboard/sessions", label: "الجلسات", icon: Gavel },
@@ -70,6 +73,8 @@ const NAV = [
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  // العدّاد يُجلب فقط والقائمة مفتوحة — جرس الهيدر يتكفّل بالتنبيه المستمر
+  const unreadCount = useUnreadCount({ enabled: open });
 
   return (
     <>
@@ -125,7 +130,13 @@ export function MobileNav() {
                     )}
                   >
                     <Icon className="size-5 shrink-0" />
-                    <span>{item.label}</span>
+                    <span className="flex-1">{item.label}</span>
+                    {item.href === "/dashboard/notifications" &&
+                      unreadCount > 0 && (
+                        <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[10px] font-semibold grid place-items-center shrink-0">
+                          {unreadCount > 99 ? "99+" : unreadCount}
+                        </span>
+                      )}
                   </Link>
                 );
               })}

@@ -6,6 +6,7 @@ import type {
   PowerOfAttorneyFiltersInput,
 } from "@/lib/validations/power-of-attorney";
 import { NotFoundError } from "@/lib/errors";
+import { notifyPoaCreated } from "@/services/notification-service";
 
 export async function listPowersOfAttorney(
   tenantId: string,
@@ -128,7 +129,7 @@ export async function createPowerOfAttorney(
   // تأكد أن العميل يخص نفس المكتب
   const client = await prisma.client.findFirst({
     where: { id: input.clientId, tenantId },
-    select: { id: true },
+    select: { id: true, name: true },
   });
   if (!client) throw new NotFoundError("العميل غير موجود");
 
@@ -170,6 +171,20 @@ export async function createPowerOfAttorney(
 
     return poa;
   });
+
+  // إشعار الموظفين المخوّلين بالوكالة (ما عدا من أنشأها)
+  const authorizedIds = (input.employeeIds ?? []).filter(
+    (empId): empId is string => typeof empId === "string" && empId !== userId,
+  );
+  if (authorizedIds.length) {
+    await notifyPoaCreated({
+      tenantId,
+      poaId: created.id,
+      poaNumber: created.number,
+      clientName: client.name,
+      recipientIds: authorizedIds,
+    });
+  }
 
   return created;
 }

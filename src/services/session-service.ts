@@ -159,13 +159,24 @@ export async function createSession(
     return session;
   });
 
-  if (input.lawyerId && input.lawyerId !== userId) {
-    await notifySessionCreated(
-      created.id,
-      input.lawyerId,
-      created.case.title,
-      `${formatDate(created.date)} — ${created.time}`,
-    );
+  // كل المحامين المعيّنين على القضية + محامي الجلسة (ما عدا منشئ الجلسة)
+  const caseLawyers = await prisma.caseLawyer.findMany({
+    where: { caseId: input.caseId },
+    select: { userId: true },
+  });
+  const recipientIds = Array.from(
+    new Set([...caseLawyers.map((l) => l.userId), input.lawyerId]),
+  ).filter((uid) => uid && uid !== userId);
+
+  if (recipientIds.length) {
+    await notifySessionCreated({
+      tenantId,
+      sessionId: created.id,
+      caseTitle: created.case.title,
+      court: created.court,
+      dateLabel: `${formatDate(created.date)} — ${created.time}`,
+      recipientIds,
+    });
   }
 
   return created;

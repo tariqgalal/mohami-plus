@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { PushPermissionBanner } from "@/components/layout/push-permission-banner";
 
 export default async function DashboardLayout({
   children,
@@ -66,6 +67,7 @@ export default async function DashboardLayout({
           todayTasksCount={todayTasksCount}
         />
         <main className="flex-1 overflow-y-auto p-6 animate-fade-in-page">
+          <PushPermissionBanner />
           {children}
         </main>
       </div>

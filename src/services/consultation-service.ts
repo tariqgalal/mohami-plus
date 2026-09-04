@@ -6,6 +6,18 @@ import type {
   ConsultationFiltersInput,
 } from "@/lib/validations/consultation";
 import { NotFoundError } from "@/lib/errors";
+import { CONSULTATION_TYPE } from "@/lib/constants";
+import { notifyConsultationCreated } from "@/services/notification-service";
+
+/** يستخرج معرّفات المسؤولين من عمود assignedTo (JSON) */
+function assignedIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((a) =>
+      a && typeof a === "object" ? (a as { id?: unknown }).id : null,
+    )
+    .filter((id): id is string => typeof id === "string" && id.length > 0);
+}
 
 export async function listConsultations(
   tenantId: string,
@@ -83,7 +95,7 @@ export async function createConsultation(
 ) {
   const clientName = await resolveClientName(tenantId, input.clientId);
 
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     const agg = await tx.consultation.aggregate({
       where: { tenantId },
       _max: { number: true },
@@ -123,6 +135,24 @@ export async function createConsultation(
 
     return created;
   });
+
+  // إشعار المسؤولين المعيّنين على الاستشارة (ما عدا من أنشأها)
+  const recipients = assignedIds(created.assignedTo).filter(
+    (id) => id !== userId,
+  );
+  if (recipients.length) {
+    await notifyConsultationCreated({
+      tenantId,
+      consultationId: created.id,
+      title: created.title,
+      typeLabel:
+        CONSULTATION_TYPE[created.type as keyof typeof CONSULTATION_TYPE] ??
+        created.type,
+      recipientIds: recipients,
+    });
+  }
+
+  return created;
 }
 
 export async function updateConsultation(

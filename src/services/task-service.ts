@@ -9,10 +9,30 @@ import type {
   UpdateTaskTemplateInput,
 } from "@/lib/validations/task";
 import { NotFoundError } from "@/lib/errors";
+import {
+  notifyTaskAssigned,
+  notifyTaskCompleted,
+} from "@/services/notification-service";
 
 interface Assignee {
   id: string;
   name: string;
+}
+
+/** يستخرج معرّفات المكلّفين من عمود assignedTo (JSON) */
+function assigneeIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((a) => (a && typeof a === "object" ? (a as Assignee).id : null))
+    .filter((id): id is string => typeof id === "string" && id.length > 0);
+}
+
+async function userName(userId: string): Promise<string> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true },
+  });
+  return user?.name ?? "أحد أعضاء الفريق";
 }
 
 export async function listTasks(tenantId: string, filters: TaskFiltersInput) {
@@ -95,7 +115,7 @@ export async function createTask(
 ) {
   const clientName = await resolveClientName(tenantId, input.clientId);
 
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     const agg = await tx.task.aggregate({
       where: { tenantId },
       _max: { number: true },
@@ -141,6 +161,22 @@ export async function createTask(
 
     return created;
   });
+
+  // إشعار المكلّفين بالمهمة الجديدة (ما عدا من أنشأها)
+  const recipients = assigneeIds(created.assignedTo).filter(
+    (id) => id !== userId,
+  );
+  if (recipients.length) {
+    await notifyTaskAssigned({
+      tenantId,
+      taskId: created.id,
+      taskTitle: created.title,
+      assigneeIds: recipients,
+      assignerName: await userName(userId),
+    });
+  }
+
+  return created;
 }
 
 export async function updateTask(
@@ -151,7 +187,13 @@ export async function updateTask(
 ) {
   const existing = await prisma.task.findFirst({
     where: { id, tenantId },
-    select: { id: true },
+    select: {
+      id: true,
+      title: true,
+      status: true,
+      assignedTo: true,
+      createdById: true,
+    },
   });
   if (!existing) return null;
 
@@ -160,7 +202,7 @@ export async function updateTask(
       ? await resolveClientName(tenantId, input.clientId)
       : undefined;
 
-  return prisma.$transaction(async (tx) => {
+  const updatedTask = await prisma.$transaction(async (tx) => {
     const updated = await tx.task.update({
       where: { id },
       data: {
@@ -200,6 +242,52 @@ export async function updateTask(
 
     return updated;
   });
+
+  // مكلّفون جدد أُضيفوا في هذا التعديل
+  if (input.assignedTo !== undefined) {
+    const previous = new Set(assigneeIds(existing.assignedTo));
+    const newlyAssigned = assigneeIds(updatedTask.assignedTo).filter(
+      (uid) => !previous.has(uid) && uid !== userId,
+    );
+    if (newlyAssigned.length) {
+      await notifyTaskAssigned({
+        tenantId,
+        taskId: id,
+        taskTitle: updatedTask.title,
+        assigneeIds: newlyAssigned,
+        assignerName: await userName(userId),
+      });
+    }
+  }
+
+  // اكتملت المهمة → إشعار منشئها ومديري المكتب
+  if (
+    input.status === "COMPLETED" &&
+    existing.status !== "COMPLETED"
+  ) {
+    const admins = await prisma.user.findMany({
+      where: { tenantId, role: "FIRM_ADMIN", isActive: true },
+      select: { id: true },
+    });
+    const recipients = Array.from(
+      new Set([
+        ...(existing.createdById ? [existing.createdById] : []),
+        ...admins.map((a) => a.id),
+      ]),
+    ).filter((uid) => uid !== userId);
+
+    if (recipients.length) {
+      await notifyTaskCompleted({
+        tenantId,
+        taskId: id,
+        taskTitle: updatedTask.title,
+        recipientIds: recipients,
+        completedByName: await userName(userId),
+      });
+    }
+  }
+
+  return updatedTask;
 }
 
 export async function deleteTask(

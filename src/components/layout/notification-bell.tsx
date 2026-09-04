@@ -1,81 +1,73 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  Bell,
-  Briefcase,
-  Gavel,
-  Wallet,
-  Sparkles,
-  CheckCheck,
-  Loader2,
-} from "lucide-react";
+import { Bell, CheckCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatRelativeTime } from "@/lib/format";
+import { notificationStyle } from "./notification-styles";
 
-interface Notification {
+interface NotificationItem {
   id: string;
   title: string;
   body: string;
   type: string;
   isRead: boolean;
-  data: string | null;
+  link: string | null;
   createdAt: string | Date;
 }
 
-const TYPE_STYLES: Record<string, { icon: typeof Bell; color: string }> = {
-  SESSION_REMINDER: { icon: Gavel, color: "bg-amber-50 text-amber-600" },
-  SESSION_CREATED: { icon: Gavel, color: "bg-amber-50 text-amber-600" },
-  CASE_ASSIGNED: { icon: Briefcase, color: "bg-blue-50 text-blue-600" },
-  CASE_UPDATED: { icon: Briefcase, color: "bg-violet-50 text-violet-600" },
-  INVOICE_OVERDUE: { icon: Wallet, color: "bg-rose-50 text-rose-600" },
-  GENERAL: { icon: Sparkles, color: "bg-slate-50 text-slate-600" },
-};
-
-function parseLink(raw: string | null): string | null {
-  if (!raw) return null;
-  try {
-    const d = JSON.parse(raw);
-    return typeof d?.link === "string" ? d.link : null;
-  } catch {
-    return null;
-  }
-}
+/** فاصل تحديث عدّاد غير المقروء */
+const POLL_MS = 30_000;
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<Notification[]>([]);
+  const [items, setItems] = useState<NotificationItem[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  async function fetchNotifications(silent = false) {
-    if (!silent) setLoading(true);
+  // polling خفيف: العدّاد فقط
+  const fetchUnreadCount = useCallback(async () => {
     try {
-      const res = await fetch("/api/notifications?limit=10", { cache: "no-store" });
+      const res = await fetch("/api/notifications/unread-count", {
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (json.success) setUnread(json.data.count);
+    } catch {
+      // تجاهل — سيُعاد المحاولة في الدورة التالية
+    }
+  }, []);
+
+  const fetchNotifications = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/notifications?limit=20", {
+        cache: "no-store",
+      });
       const json = await res.json();
       if (json.success) {
         setItems(json.data.items);
         setUnread(json.data.unreadCount);
       }
     } catch {
-      // ignore
+      // تجاهل
     } finally {
-      if (!silent) setLoading(false);
+      setLoading(false);
     }
-  }
-
-  useEffect(() => {
-    fetchNotifications(true);
-    const id = window.setInterval(() => fetchNotifications(true), 60_000);
-    return () => window.clearInterval(id);
   }, []);
 
   useEffect(() => {
+    void fetchUnreadCount();
+    const id = window.setInterval(fetchUnreadCount, POLL_MS);
+    return () => window.clearInterval(id);
+  }, [fetchUnreadCount]);
+
+  useEffect(() => {
     if (!open) return;
-    fetchNotifications();
+    void fetchNotifications();
     function onClickOutside(e: MouseEvent) {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -83,17 +75,15 @@ export function NotificationBell() {
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [open]);
+  }, [open, fetchNotifications]);
 
   async function markOneRead(id: string) {
-    setItems((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-    );
+    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
     setUnread((u) => Math.max(0, u - 1));
     try {
-      await fetch(`/api/notifications/${id}`, { method: "PUT" });
+      await fetch(`/api/notifications/${id}/read`, { method: "PATCH" });
     } catch {
-      // ignore
+      // تجاهل
     }
   }
 
@@ -101,9 +91,9 @@ export function NotificationBell() {
     setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setUnread(0);
     try {
-      await fetch("/api/notifications", { method: "PUT" });
+      await fetch("/api/notifications/read-all", { method: "PATCH" });
     } catch {
-      // ignore
+      // تجاهل
     }
   }
 
@@ -129,9 +119,7 @@ export function NotificationBell() {
             <div>
               <h3 className="font-semibold text-slate-900">الإشعارات</h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                {unread > 0
-                  ? `${unread} إشعار غير مقروء`
-                  : "كل شيء على ما يرام"}
+                {unread > 0 ? `${unread} إشعار غير مقروء` : "كل شيء على ما يرام"}
               </p>
             </div>
             {unread > 0 && (
@@ -157,9 +145,8 @@ export function NotificationBell() {
             ) : (
               <ul className="divide-y divide-slate-100">
                 {items.map((n) => {
-                  const style = TYPE_STYLES[n.type] ?? TYPE_STYLES.GENERAL;
+                  const style = notificationStyle(n.type);
                   const Icon = style.icon;
-                  const link = parseLink(n.data);
                   const content = (
                     <div
                       className={cn(
@@ -194,8 +181,8 @@ export function NotificationBell() {
                   );
                   return (
                     <li key={n.id}>
-                      {link ? (
-                        <Link href={link} onClick={() => setOpen(false)}>
+                      {n.link ? (
+                        <Link href={n.link} onClick={() => setOpen(false)}>
                           {content}
                         </Link>
                       ) : (

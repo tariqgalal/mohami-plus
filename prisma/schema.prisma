@@ -63,6 +63,7 @@ model Tenant {
   courtJudgments   CourtJudgment[]
   tasks            Task[]
   taskTemplates    TaskTemplate[]
+  notifications    Notification[]
 }
 
 enum Plan {
@@ -107,7 +108,12 @@ model User {
 
   isSuperAdmin Boolean @default(false)
 
+  // تفضيلات الإشعارات (JSON) — { tasks: bool, sessions: bool, cases: bool, messages: bool, invoices: bool, leaves: bool }
+  notificationPreferences Json?
+
   trialRenewalsGranted TrialRenewal[] @relation("TrialRenewalGrantor")
+  notifications        Notification[]
+  pushSubscriptions    PushSubscription[]
 
   @@index([tenantId])
   @@index([email])
@@ -545,18 +551,63 @@ model PlatformSetting {
 // ============ NOTIFICATIONS ============
 
 model Notification {
+  id          String           @id @default(cuid())
+  tenantId    String
+  userId      String
+  type        NotificationType
+  title       String
+  body        String
+  link        String?
+  isRead      Boolean          @default(false)
+  relatedId   String?
+  relatedType String?
+  createdAt   DateTime         @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([tenantId])
+  @@index([createdAt])
+  @@index([relatedId, type])
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_DUE_SOON
+  TASK_OVERDUE
+  TASK_COMPLETED
+  SESSION_REMINDER
+  SESSION_TOMORROW
+  SESSION_CREATED
+  CASE_STATUS_CHANGED
+  CASE_ASSIGNED
+  INVOICE_CREATED
+  INVOICE_DUE
+  MESSAGE_RECEIVED
+  POA_EXPIRING
+  LEAVE_REQUEST
+  LEAVE_APPROVED
+  LEAVE_REJECTED
+  CONSULTATION_NEW
+  MEETING_REMINDER
+  GENERAL
+}
+
+// ============ PUSH SUBSCRIPTIONS (اشتراكات إشعارات المتصفح) ============
+
+model PushSubscription {
   id        String   @id @default(cuid())
-  title     String
-  body      String
-  type      String
-  isRead    Boolean  @default(false)
-  data      String?  @db.Text
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
   createdAt DateTime @default(now())
 
-  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([isRead])
 }
 
 // ============ TRIAL RENEWAL LOG ============

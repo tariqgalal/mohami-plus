@@ -6,6 +6,8 @@ import type {
   MeetingFiltersInput,
   RecordMinutesInput,
 } from "@/lib/validations/meeting";
+import { formatDate } from "@/lib/format";
+import { notifyMeetingCreated } from "@/services/notification-service";
 
 export async function listMeetings(
   tenantId: string,
@@ -83,8 +85,8 @@ export async function createMeeting(
   userId: string,
   input: CreateMeetingInput,
 ) {
-  return prisma.$transaction(async (tx) => {
-    const created = await tx.meeting.create({
+  const created = await prisma.$transaction(async (tx) => {
+    const meeting = await tx.meeting.create({
       data: {
         tenantId,
         title: input.title,
@@ -118,12 +120,30 @@ export async function createMeeting(
         userId,
         action: "created",
         entity: "meeting",
-        entityId: created.id,
-        details: JSON.stringify({ title: created.title }),
+        entityId: meeting.id,
+        details: JSON.stringify({ title: meeting.title }),
       },
     });
-    return created;
+    return meeting;
   });
+
+  // إشعار كل المدعوين من أعضاء المكتب (ما عدا من أنشأ الاجتماع)
+  const attendeeIds = (input.attendees ?? [])
+    .map((a) => a.userId)
+    .filter((id): id is string => !!id && id !== userId);
+
+  if (attendeeIds.length) {
+    await notifyMeetingCreated({
+      tenantId,
+      meetingId: created.id,
+      title: created.title,
+      dateLabel: formatDate(created.date),
+      time: created.time,
+      attendeeIds,
+    });
+  }
+
+  return created;
 }
 
 export async function updateMeeting(

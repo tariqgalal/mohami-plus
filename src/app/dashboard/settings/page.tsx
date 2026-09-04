@@ -4,6 +4,7 @@ import { ProfileForm } from "@/components/settings/profile-form";
 import { PasswordForm } from "@/components/settings/password-form";
 import { TenantForm } from "@/components/settings/tenant-form";
 import { SubscriptionCard } from "@/components/settings/subscription-card";
+import { NotificationPreferencesForm } from "@/components/settings/notification-preferences-form";
 import { getCurrentUser } from "@/lib/tenant";
 
 export default async function SettingsPage() {
@@ -22,7 +23,7 @@ export default async function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">الإعدادات</h1>
         <p className="text-sm text-slate-500 mt-1">
-          إدارة بيانات الملف الشخصي والمكتب والاشتراك
+          إدارة بيانات الملف الشخصي والإشعارات والمكتب والاشتراك
         </p>
       </div>
 
@@ -30,6 +31,7 @@ export default async function SettingsPage() {
         <TabsList>
           <TabsTrigger value="profile">الملف الشخصي</TabsTrigger>
           <TabsTrigger value="security">الأمان</TabsTrigger>
+          <TabsTrigger value="notifications">الإشعارات</TabsTrigger>
           {isFirmAdmin && <TabsTrigger value="firm">المكتب</TabsTrigger>}
           {isFirmAdmin && <TabsTrigger value="subscription">الاشتراك</TabsTrigger>}
         </TabsList>
@@ -40,6 +42,10 @@ export default async function SettingsPage() {
 
         <TabsContent value="security">
           <PasswordForm />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <NotificationPreferencesForm />
         </TabsContent>
 
         {isFirmAdmin && (

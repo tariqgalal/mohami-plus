@@ -5,6 +5,7 @@ import {
   deleteNotification,
 } from "@/services/notification-service";
 
+// PUT /api/notifications/[id] — تعليم كمقروء (متوافق مع الواجهة القديمة)
 export async function PUT(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },

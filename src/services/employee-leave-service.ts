@@ -6,6 +6,20 @@ import type {
   EmployeeLeaveFiltersInput,
 } from "@/lib/validations/employee-leave";
 import { NotFoundError } from "@/lib/errors";
+import { formatDate } from "@/lib/format";
+import {
+  notifyLeaveRequested,
+  notifyLeaveDecision,
+} from "@/services/notification-service";
+
+/** مديرو المكتب — مستلمو طلبات الإجازة */
+async function firmAdminIds(tenantId: string): Promise<string[]> {
+  const admins = await prisma.user.findMany({
+    where: { tenantId, role: "FIRM_ADMIN", isActive: true },
+    select: { id: true },
+  });
+  return admins.map((a) => a.id);
+}
 
 /** عدد الأيام شاملاً يومي البداية والنهاية */
 function daysBetween(start: Date, end: Date): number {
@@ -88,8 +102,8 @@ export async function createEmployeeLeave(
   const employeeName = await resolveEmployeeName(tenantId, input.employeeId);
   const daysCount = daysBetween(input.startDate, input.endDate);
 
-  return prisma.$transaction(async (tx) => {
-    const created = await tx.employeeLeave.create({
+  const created = await prisma.$transaction(async (tx) => {
+    const leave = await tx.employeeLeave.create({
       data: {
         tenantId,
         employeeId: input.employeeId,
@@ -111,13 +125,32 @@ export async function createEmployeeLeave(
         userId,
         action: "created",
         entity: "employee_leave",
-        entityId: created.id,
+        entityId: leave.id,
         details: JSON.stringify({ employeeName, daysCount }),
       },
     });
 
-    return created;
+    return leave;
   });
+
+  // طلب جديد قيد الانتظار → إشعار مديري المكتب
+  if (created.status === "PENDING") {
+    const recipients = (await firmAdminIds(tenantId)).filter(
+      (uid) => uid !== userId,
+    );
+    if (recipients.length) {
+      await notifyLeaveRequested({
+        tenantId,
+        leaveId: created.id,
+        employeeName,
+        startLabel: formatDate(created.startDate),
+        endLabel: formatDate(created.endDate),
+        adminIds: recipients,
+      });
+    }
+  }
+
+  return created;
 }
 
 export async function updateEmployeeLeave(
@@ -142,7 +175,7 @@ export async function updateEmployeeLeave(
       ? daysBetween(startDate, endDate)
       : undefined;
 
-  return prisma.$transaction(async (tx) => {
+  const updatedLeave = await prisma.$transaction(async (tx) => {
     const updated = await tx.employeeLeave.update({
       where: { id },
       data: {
@@ -171,6 +204,23 @@ export async function updateEmployeeLeave(
 
     return updated;
   });
+
+  // قرار على الطلب (قبول/رفض) → إشعار الموظف صاحب الطلب
+  if (
+    (input.status === "APPROVED" || input.status === "REJECTED") &&
+    input.status !== existing.status
+  ) {
+    await notifyLeaveDecision({
+      tenantId,
+      leaveId: id,
+      employeeId: updatedLeave.employeeId,
+      approved: input.status === "APPROVED",
+      startLabel: formatDate(updatedLeave.startDate),
+      endLabel: formatDate(updatedLeave.endDate),
+    });
+  }
+
+  return updatedLeave;
 }
 
 export async function deleteEmployeeLeave(

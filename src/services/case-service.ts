@@ -213,7 +213,12 @@ export async function createCase(
       ...(input.assistantLawyerIds ?? []),
     ]),
   ).filter((id) => id !== userId);
-  await notifyCaseAssigned(created.id, created.title, assignedUserIds);
+  await notifyCaseAssigned({
+    tenantId,
+    caseId: created.id,
+    caseTitle: created.title,
+    userIds: assignedUserIds,
+  });
 
   return created;
 }
@@ -318,14 +323,52 @@ export async function updateCase(
     return updated;
   });
 
+  // محامون أُضيفوا للقضية في هذا التعديل → إشعار تعيين
+  if (input.primaryLawyerId || input.assistantLawyerIds) {
+    const previous = new Set(existing.lawyers.map((l) => l.userId));
+    const newlyAssigned = Array.from(
+      new Set([
+        ...(input.primaryLawyerId ? [input.primaryLawyerId] : []),
+        ...(input.assistantLawyerIds ?? []),
+      ]),
+    ).filter((uid) => !previous.has(uid) && uid !== userId);
+
+    if (newlyAssigned.length) {
+      await notifyCaseAssigned({
+        tenantId,
+        caseId: id,
+        caseTitle: input.title ?? existing.title,
+        userIds: newlyAssigned,
+      });
+    }
+  }
+
   if (input.status && input.status !== existing.status) {
     const statusLabel =
       CASE_STATUS_ALL[input.status as keyof typeof CASE_STATUS_ALL] ??
       input.status;
-    const notifyIds = existing.lawyers
-      .map((l) => l.userId)
-      .filter((uid) => uid !== userId);
-    await notifyCaseStatusChanged(id, existing.title, statusLabel, notifyIds);
+    const oldStatusLabel =
+      CASE_STATUS_ALL[existing.status as keyof typeof CASE_STATUS_ALL] ??
+      existing.status;
+    // كل المحامين المعيّنين + مديري المكتب (ما عدا من نفّذ التغيير)
+    const admins = await prisma.user.findMany({
+      where: { tenantId, role: "FIRM_ADMIN", isActive: true },
+      select: { id: true },
+    });
+    const notifyIds = Array.from(
+      new Set([
+        ...existing.lawyers.map((l) => l.userId),
+        ...admins.map((a) => a.id),
+      ]),
+    ).filter((uid) => uid !== userId);
+    await notifyCaseStatusChanged({
+      tenantId,
+      caseId: id,
+      caseTitle: existing.title,
+      oldStatusLabel,
+      newStatusLabel: statusLabel,
+      userIds: notifyIds,
+    });
   }
 
   return updatedCase;

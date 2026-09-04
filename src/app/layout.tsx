@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { APP_NAME, APP_DESCRIPTION } from "@/lib/constants";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -9,6 +9,15 @@ export const metadata: Metadata = {
     template: `%s | ${APP_NAME}`,
   },
   description: APP_DESCRIPTION,
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon-192x192.png",
+    apple: "/icons/icon-192x192.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1e40af",
 };
 
 export default function RootLayout({
